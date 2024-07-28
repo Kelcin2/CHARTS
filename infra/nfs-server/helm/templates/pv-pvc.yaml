@@ -5,7 +5,7 @@ metadata:
 spec:
   resources:
     requests:
-      storage: 500Mi
+      storage: 150Mi
   accessModes:
     - ReadOnlyMany
   storageClassName: ""
@@ -18,7 +18,7 @@ metadata:
   name: pv-nfs-server-load-kernel-modules
 spec:
   capacity:
-    storage: 500Mi
+    storage: 150Mi
   accessModes:
     - ReadOnlyMany
   persistentVolumeReclaimPolicy: Retain
@@ -58,7 +58,7 @@ spec:
     name: pvc-nfs-server-rw
     namespace: {{ .Release.Namespace }}
   hostPath:
-    path: /opt/nfs-storage/readWrite
+    path: {{ .Values.deployment.nfsServer.hostPath.write }}
     type: DirectoryOrCreate
 ---
 apiVersion: v1
@@ -89,5 +89,5 @@ spec:
     name: pvc-nfs-server-ro
     namespace: {{ .Release.Namespace }}
   hostPath:
-    path: /opt/nfs-storage/readOnly
+    path: {{ .Values.deployment.nfsServer.hostPath.read }}
     type: DirectoryOrCreate

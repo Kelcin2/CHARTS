@@ -44,3 +44,8 @@ deployment:
       requests:
         cpu: 500m
         memory: 2Gi
+    hostPath:
+      write: /opt/nfs-storage/readWrite
+      read: /opt/nfs-storage/readOnly
+    nodeSelector:
+      kelcin-nfs-server: "true"

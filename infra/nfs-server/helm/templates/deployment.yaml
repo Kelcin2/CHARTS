@@ -106,4 +106,4 @@ spec:
               - key: exports.txt
                 path: exports
       nodeSelector:
-        kelcin-nfs-server: "true"
+        {{- toYaml .Values.deployment.nfsServer.nodeSelector | nindent 8 }}
