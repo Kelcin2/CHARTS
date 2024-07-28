@@ -1,0 +1,51 @@
+-- 来自于192.168.32.128:8001的请求都会转发给Kubernetes的API服务器, --port默认是8001, --address默认是127.0.0.1
+kubectl proxy --port=8001 --address='192.168.32.128' --accept-hosts='^.*'
+
+kubectl run http-service --image=flyinghe/httpservice:1.0 --port=8081 --image-pull-policy=IfNotPresent
+
+kubectl run http-service2 --image=flyinghe/httpservice:1.0 --port=8081 --image-pull-policy=IfNotPresent
+
+kubectl create deployment http-service --image=flyinghe/httpservice:1.0 --port=8081
+
+kubectl expose pod http-service --type=NodePort
+
+minikube service http-service --url
+
+minikube start --extra-config=apiserver.Features.Enable-SwaggerUI=true
+
+minikube start -n 1 --memory=24g --cpus=10 --kubernetes-version=v1.30.0 --disk-size=120g --namespace kelcin --mount=true --mount-string='/opt/nfs-storage:/opt/nfs-storage' --extra-config=apiserver.service-node-port-range=1-65535
+
+-- 来自于任何主机且通过访问本地端口8081的请求都会被转发到Pod的8081端口. 指定的资源必须有关联到的pod, 即资源yaml定义中必须有Pod的selector
+kubectl port-forward --address 0.0.0.0 deployment/http-service 8081:8081 (本地端口:Pod端口)
+
+
+minikube tunnel
+kubectl expose deployment http-service --type=LoadBalancer --name http-service
+
+minikube dashboard --url
+
+kubectl scale deployment http-service --replicas=3
+
+
+kubectl config set-context minikube --namespace custom-namespace
+
+
+
+options ndots:5
+--------------------------------------------------------------------------------------------------------
+kubectl config current-context
+
+
+kubectl config set-context $(kubectl config current-context) --namespace kube-system
+
+
+problems:
+1. pod被部署在多个Node中时使用LoadBalancer服务,根据EXTERNAL-IP访问服务,无法正常路由到正确的服务,可能会路由到其他的pod服务
+根据测试结果显示,可能是由于minikube tunnel 只route了minikube这个master节点,而没有路由到另外两个worker节点,
+当把另外两个worker节点的pod迁移到minikube节点时,请求就正常了
+
+2.基于Service pod之间的访问只能限制在在同一个node上的pod,不同node上的pod不能根据service暴露出来的ip来访问
+
+
+
+kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="InternalIP")] .address}'

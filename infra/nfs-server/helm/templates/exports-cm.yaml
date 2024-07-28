@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nfs-server-exports-cm
+  labels:
+    {{- include "nfs-server.labels" . | nindent 4 }}
+data:
+  exports.txt: |-
+    {{- .Files.Get "conf/exports.txt" | nindent 4 }}

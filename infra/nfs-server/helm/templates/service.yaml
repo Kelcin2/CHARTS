@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nfs-server-svc
+  labels:
+    {{- include "nfs-server.labels" . | nindent 4 }}
+    app: nfs-server
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - name: tcp-2049
+      port: 2049
+      protocol: TCP
+      targetPort: tcp-2049
+    - name: udp-2049
+      port: 2049
+      protocol: UDP
+      targetPort: udp-2049
+    - name: tcp-111
+      port: 111
+      protocol: TCP
+      targetPort: tcp-111
+    - name: udp-111
+      port: 111
+      protocol: UDP
+      targetPort: udp-111
+    - name: tcp-32765
+      port: 32765
+      protocol: TCP
+      targetPort: tcp-32765
+    - name: udp-32765
+      port: 32765
+      protocol: UDP
+      targetPort: udp-32765
+    - name: tcp-32767
+      port: 32767
+      protocol: TCP
+      targetPort: tcp-32767
+    - name: udp-32767
+      port: 32767
+      protocol: UDP
+      targetPort: udp-32767
+  selector:
+    {{- include "nfs-server.selectorLabels" . | nindent 4 }}
+    app: nfs-server

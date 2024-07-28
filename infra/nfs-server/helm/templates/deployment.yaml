@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nfs-server
+  labels:
+    {{- include "nfs-server.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "nfs-server.selectorLabels" . | nindent 6 }}
+      app: nfs-server
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "nfs-server.labels" . | nindent 8 }}
+        app: nfs-server
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: nfs-server
+          image: "{{ .Values.deployment.nfsServer.image }}:{{ .Values.deployment.nfsServer.imageTag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            capabilities:
+              add:
+              - SYS_ADMIN
+              - SYS_MODULE
+          ports:
+            - containerPort: 2049
+              protocol: TCP
+              name: tcp-2049
+            - containerPort: 2049
+              protocol: UDP
+              name: udp-2049
+            - containerPort: 111
+              protocol: TCP
+              name: tcp-111
+            - containerPort: 111
+              protocol: UDP
+              name: udp-111
+            - containerPort: 32765
+              protocol: TCP
+              name: tcp-32765
+            - containerPort: 32765
+              protocol: UDP
+              name: udp-32765
+            - containerPort: 32767
+              protocol: TCP
+              name: tcp-32767
+            - containerPort: 32767
+              protocol: UDP
+              name: udp-32767
+          livenessProbe:
+            tcpSocket:
+              port: 2049
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+            timeoutSeconds: 1
+          readinessProbe:
+            tcpSocket:
+              port: 2049
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+            timeoutSeconds: 1
+          resources:
+            {{- toYaml .Values.deployment.nfsServer.resources | nindent 12 }}
+          volumeMounts:
+            - name: read-only
+              mountPath: /opt/nfs/ro
+              readOnly: true
+            - name: read-write
+              mountPath: /opt/nfs/rw
+            - name: exports
+              mountPath: /etc/exports
+              subPath: exports
+              readOnly: true
+            - name: load-module
+              mountPath: /lib/modules
+              readOnly: true
+      volumes:
+        - name: load-module
+          persistentVolumeClaim:
+            claimName: pvc-nfs-server-load-kernel-modules
+        - name: read-only
+          persistentVolumeClaim:
+            claimName: pvc-nfs-server-ro
+        - name: read-write
+          persistentVolumeClaim:
+            claimName: pvc-nfs-server-rw
+        - name: exports
+          configMap:
+            name: nfs-server-exports-cm
+            items:
+              - key: exports.txt
+                path: exports
+      nodeSelector:
+        kelcin-nfs-server: "true"
