@@ -77,33 +77,33 @@ spec:
           resources:
             {{- toYaml .Values.deployment.nfsServer.resources | nindent 12 }}
           volumeMounts:
+            - name: load-module
+              mountPath: /lib/modules
+              readOnly: true
+            - name: exports
+              mountPath: /etc/exports
+              subPath: exports
+              readOnly: true
             - name: read-only
               mountPath: /opt/nfs/ro
               readOnly: true
             - name: read-write
               mountPath: /opt/nfs/rw
-            - name: exports
-              mountPath: /etc/exports
-              subPath: exports
-              readOnly: true
-            - name: load-module
-              mountPath: /lib/modules
-              readOnly: true
       volumes:
         - name: load-module
           persistentVolumeClaim:
             claimName: pvc-nfs-server-load-kernel-modules
-        - name: read-only
-          persistentVolumeClaim:
-            claimName: pvc-nfs-server-ro
-        - name: read-write
-          persistentVolumeClaim:
-            claimName: pvc-nfs-server-rw
         - name: exports
           configMap:
             name: nfs-server-exports-cm
             items:
               - key: exports.txt
                 path: exports
+        - name: read-only
+          persistentVolumeClaim:
+            claimName: pvc-nfs-server-ro
+        - name: read-write
+          persistentVolumeClaim:
+            claimName: pvc-nfs-server-rw
       nodeSelector:
         {{- toYaml .Values.deployment.nfsServer.nodeSelector | nindent 8 }}
