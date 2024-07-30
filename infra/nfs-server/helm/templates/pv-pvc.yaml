@@ -37,11 +37,12 @@ metadata:
 spec:
   resources:
     requests:
-      storage: 100Gi
+      storage: {{ .Values.deployment.nfsServer.rwStorage }}
   accessModes:
     - ReadWriteMany
   storageClassName: ""
   volumeMode: Filesystem
+  volumeName: pv-nfs-server-rw
 ---
 apiVersion: v1
 kind: PersistentVolume
@@ -49,7 +50,7 @@ metadata:
   name: pv-nfs-server-rw
 spec:
   capacity:
-    storage: 100Gi
+    storage: {{ .Values.deployment.nfsServer.rwStorage }}
   accessModes:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
@@ -68,11 +69,12 @@ metadata:
 spec:
   resources:
     requests:
-      storage: 100Gi
+      storage: {{ .Values.deployment.nfsServer.roStorage }}
   accessModes:
     - ReadOnlyMany
   storageClassName: ""
   volumeMode: Filesystem
+  volumeName: pv-nfs-server-ro
 ---
 apiVersion: v1
 kind: PersistentVolume
@@ -80,7 +82,7 @@ metadata:
   name: pv-nfs-server-ro
 spec:
   capacity:
-    storage: 100Gi
+    storage: {{ .Values.deployment.nfsServer.roStorage }}
   accessModes:
     - ReadOnlyMany
   persistentVolumeReclaimPolicy: Retain

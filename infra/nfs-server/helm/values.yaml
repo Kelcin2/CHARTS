@@ -49,3 +49,5 @@ deployment:
       read: /opt/nfs-storage/readOnly
     nodeSelector:
       kelcin-nfs-server: "true"
+    roStorage: 100Gi
+    rwStorage: 100Gi
