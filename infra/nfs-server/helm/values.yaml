@@ -39,11 +39,11 @@ deployment:
     imageTag: 2.2.1
     resources:
       limits:
-        cpu: 1
-        memory: 4Gi
+        cpu: 400m
+        memory: 400Mi
       requests:
-        cpu: 500m
-        memory: 2Gi
+        cpu: 200m
+        memory: 200Mi
     hostPath:
       write: /opt/nfs-storage/readWrite
       read: /opt/nfs-storage/readOnly
