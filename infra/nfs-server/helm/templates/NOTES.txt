@@ -1,7 +1,16 @@
-****************************************************************************************
-**                                                                                    **
-**   Thank you for deploying {{ .Chart.Name }} with version {{ .Chart.AppVersion }}   **
-**   Namespace: {{ .Release.Namespace }}                                              **
-**   Release Name: {{ .Release.Name }}                                                **
-**                                                                                    **
-****************************************************************************************
+{{- $thanks := printf "Thank you for deploying `%s` with version `%s`" .Chart.Name .Chart.AppVersion -}}
+{{- $lenBlank := $thanks | len | sub 82 | max 0 | int -}}
+{{- $thanks = printf "**%s%s%s**" (repeat 2 " ") $thanks  (repeat $lenBlank " ") -}}
+{{- $ns := printf "Namespace: %s" .Release.Namespace -}}
+{{- $lenBlank = $ns | len | sub 82 | max 0 | int -}}
+{{- $ns = printf "**%s%s%s**" (repeat 2 " ") $ns  (repeat $lenBlank " ") -}}
+{{- $releaseName := printf "Release Name: %s" .Release.Name -}}
+{{- $lenBlank = $releaseName | len | sub 82 | max 0 | int -}}
+{{- $releaseName = printf "**%s%s%s**" (repeat 2 " ") $releaseName  (repeat $lenBlank " ") -}}
+{{ repeat 88 "*" }}
+**{{ repeat 84 " " }}**
+{{ $thanks }}
+{{ $ns }}
+{{ $releaseName }}
+**{{ repeat 84 " " }}**
+{{ repeat 88 "*" }}
