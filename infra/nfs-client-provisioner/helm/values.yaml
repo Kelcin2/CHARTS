@@ -1,0 +1,55 @@
+# Default values for nfs-client-provisioner.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+
+deployment:
+  nfsClientProvisioner:
+    image: k8s.gcr.io/sig-storage/nfs-subdir-external-provisioner
+    imageTag: v4.0.2
+    serviceAccountName: "nfs-client-provisioner-sa"
+    provisionerName: "k8s-kelcin.io/nfs-client-provisioner"
+    nfsRootPath: /opt/nfs/rw
+    nfsStorage: 100Gi
+    nfsServer:
+      svcNamespace: kelcin-nfs-server
+      svcName: nfs-server-svc
+      host:
+    storageClass:
+      create: true
+      name: nfs-client-provisioner-sc
+    resources:
+      limits:
+        cpu: 200m
+        memory: 200Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi

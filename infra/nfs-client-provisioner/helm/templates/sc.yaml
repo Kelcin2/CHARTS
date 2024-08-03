@@ -1,0 +1,16 @@
+{{- if .Values.deployment.nfsClientProvisioner.storageClass.create }}
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ .Values.deployment.nfsClientProvisioner.storageClass.name | quote }}
+  labels:
+      {{- include "nfs-client-provisioner.labels" . | nindent 4 }}
+provisioner: {{ .Values.deployment.nfsClientProvisioner.provisionerName | quote }}
+# control the value of property persistentVolumeReclaimPolicy in pv created by this StorageClass
+# Delete means the pv is going to be deleted when the relevant pvc deleted
+reclaimPolicy: Delete
+parameters:
+  # means it's going to keep the directory after deleting relevant pvc
+  onDelete: "retain"
+  pathPattern: "${.PVC.namespace}-${.PVC.name}"
+{{- end }}

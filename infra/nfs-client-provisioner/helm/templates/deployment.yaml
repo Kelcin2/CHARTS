@@ -1,0 +1,67 @@
+{{- $nfsServer:= include "nfs-client-provisioner.getNfsServer" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nfs-client-provisioner
+  labels:
+    {{- include "nfs-client-provisioner.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "nfs-client-provisioner.selectorLabels" . | nindent 6 }}
+      app: nfs-client-provisioner
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  template:
+    metadata:
+      labels:
+        {{- include "nfs-client-provisioner.labels" . | nindent 8 }}
+        app: nfs-client-provisioner
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ .Values.deployment.nfsClientProvisioner.serviceAccountName }}
+      containers:
+        - name: nfs-client-provisioner
+          image: "{{ .Values.deployment.nfsClientProvisioner.image }}:{{ .Values.deployment.nfsClientProvisioner.imageTag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+          - name: PROVISIONER_NAME
+            value: {{ .Values.deployment.nfsClientProvisioner.provisionerName }}
+          - name: NFS_SERVER
+            value: {{ $nfsServer }}
+          - name: NFS_PATH
+            value: {{ .Values.deployment.nfsClientProvisioner.nfsRootPath }}
+          livenessProbe:
+            tcpSocket:
+              host: {{ $nfsServer }}
+              port: 2049
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            failureThreshold: 3
+            timeoutSeconds: 1
+          readinessProbe:
+            tcpSocket:
+              host: {{ $nfsServer }}
+              port: 2049
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+            timeoutSeconds: 1
+          resources:
+            {{- toYaml .Values.deployment.nfsClientProvisioner.resources | nindent 12 }}
+          volumeMounts:
+            - name: nfs-client-root
+              mountPath: /persistentvolumes
+      volumes:
+        - name: nfs-client-root
+          persistentVolumeClaim:
+            claimName: pvc-nfs-client-provisioner

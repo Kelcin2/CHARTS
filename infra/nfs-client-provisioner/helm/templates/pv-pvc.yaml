@@ -1,0 +1,32 @@
+{{- $nfsServer:= include "nfs-client-provisioner.getNfsServer" . -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-nfs-client-provisioner
+spec:
+  resources:
+    requests:
+      storage: {{ .Values.deployment.nfsClientProvisioner.nfsStorage }}
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  volumeMode: Filesystem
+  volumeName: pv-nfs-client-provisioner
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-nfs-client-provisioner
+spec:
+  capacity:
+    storage: {{ .Values.deployment.nfsClientProvisioner.nfsStorage }}
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+  claimRef:
+    name: pvc-nfs-client-provisioner
+    namespace: {{ .Release.Namespace }}
+  nfs:
+    server: {{ $nfsServer | quote }}
+    path: {{ .Values.deployment.nfsClientProvisioner.nfsRootPath | quote }}
