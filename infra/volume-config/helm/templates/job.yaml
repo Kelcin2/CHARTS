@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: volume-config-create-job-{{ randAlphaNum 5 | lower }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "volume-config.labels" . | nindent 4 }}
+spec:
+  backoffLimit: 2
+  completionMode: NonIndexed
+  completions: 1
+  parallelism: 1
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      labels:
+        {{- include "volume-config.labels" . | nindent 8 }}
+        name: volume-config
+    spec:
+      dnsPolicy: ClusterFirst
+      restartPolicy: OnFailure
+      terminationGracePeriodSeconds: 30
+      containers:
+      - name: volume-config-create
+        image: {{ .Values.deployment.volumeConfig.image }}:{{ .Values.deployment.volumeConfig.imageTag }}
+        imagePullPolicy: IfNotPresent
+        resources:
+          {{- toYaml .Values.deployment.volumeConfig.resources | nindent 10 }}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        command: ["sh", "-c", "echo Created volume directories successfully!"]
+        volumeMounts:
+          - name: nfs-root
+            mountPath: /mnt/nfs/config
+            subPath: {{ .Values.deployment.volumeConfig.configVolumeName }}
+            readOnly: true
+          - name: nfs-root
+            mountPath: /mnt/nfs/data
+            subPath: {{ .Values.deployment.volumeConfig.dataVolumeName }}
+          - name: nfs-root
+            mountPath: /mnt/nfs/log
+            subPath: {{ .Values.deployment.volumeConfig.loggingVolumeName }}
+      volumes:
+        - name: nfs-root
+          persistentVolumeClaim:
+            claimName: pvc-volume-config-create-nfs-root

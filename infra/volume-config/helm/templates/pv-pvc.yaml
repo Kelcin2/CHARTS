@@ -1,0 +1,145 @@
+{{- $nfsServer:= include "volume-config.getNfsServer" . -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-volume-config-create-nfs-root
+  labels:
+    {{- include "volume-config.labels" . | nindent 4 }}
+spec:
+  resources:
+    requests:
+      storage: {{ .Values.deployment.volumeConfig.nfsStorage }}
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  volumeMode: Filesystem
+  volumeName: pv-volume-config-create-nfs-root
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-volume-config-create-nfs-root
+  labels:
+    {{- include "volume-config.labels" . | nindent 4 }}
+spec:
+  capacity:
+    storage: {{ .Values.deployment.volumeConfig.nfsStorage }}
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+  claimRef:
+    name: pvc-volume-config-create-nfs-root
+    namespace: {{ .Release.Namespace }}
+  nfs:
+    server: {{ $nfsServer | quote }}
+    path: {{ .Values.deployment.volumeConfig.nfsRootPath | quote }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.deployment.volumeConfig.configVolumeName | quote }}
+  labels:
+    {{- include "volume-config.labels" . | nindent 4 }}
+spec:
+  resources:
+    requests:
+      storage: {{ .Values.deployment.volumeConfig.nfsStorage }}
+  accessModes:
+    - ReadOnlyMany
+  storageClassName: ""
+  volumeMode: Filesystem
+  volumeName: {{ printf "%s-%s" .Release.Namespace .Values.deployment.volumeConfig.configVolumeName | quote }}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ printf "%s-%s" .Release.Namespace .Values.deployment.volumeConfig.configVolumeName | quote }}
+  labels:
+    {{- include "volume-config.labels" . | nindent 4 }}
+spec:
+  capacity:
+    storage: {{ .Values.deployment.volumeConfig.nfsStorage }}
+  accessModes:
+    - ReadOnlyMany
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+  claimRef:
+    name: {{ .Values.deployment.volumeConfig.configVolumeName | quote }}
+    namespace: {{ .Release.Namespace }}
+  nfs:
+    server: {{ $nfsServer | quote }}
+    path: {{ printf "%s/%s" .Values.deployment.volumeConfig.nfsRootPath .Values.deployment.volumeConfig.configVolumeName | quote }}
+    readOnly: true
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.deployment.volumeConfig.dataVolumeName | quote }}
+  labels:
+    {{- include "volume-config.labels" . | nindent 4 }}
+spec:
+  resources:
+    requests:
+      storage: {{ .Values.deployment.volumeConfig.nfsStorage }}
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  volumeMode: Filesystem
+  volumeName: {{ printf "%s-%s" .Release.Namespace .Values.deployment.volumeConfig.dataVolumeName | quote }}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ printf "%s-%s" .Release.Namespace .Values.deployment.volumeConfig.dataVolumeName | quote }}
+  labels:
+    {{- include "volume-config.labels" . | nindent 4 }}
+spec:
+  capacity:
+    storage: {{ .Values.deployment.volumeConfig.nfsStorage }}
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+  claimRef:
+    name: {{ .Values.deployment.volumeConfig.dataVolumeName | quote }}
+    namespace: {{ .Release.Namespace }}
+  nfs:
+    server: {{ $nfsServer | quote }}
+    path: {{ printf "%s/%s" .Values.deployment.volumeConfig.nfsRootPath .Values.deployment.volumeConfig.dataVolumeName | quote }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.deployment.volumeConfig.loggingVolumeName | quote }}
+  labels:
+    {{- include "volume-config.labels" . | nindent 4 }}
+spec:
+  resources:
+    requests:
+      storage: {{ .Values.deployment.volumeConfig.nfsStorage }}
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  volumeMode: Filesystem
+  volumeName: {{ printf "%s-%s" .Release.Namespace .Values.deployment.volumeConfig.loggingVolumeName | quote }}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ printf "%s-%s" .Release.Namespace .Values.deployment.volumeConfig.loggingVolumeName | quote }}
+  labels:
+    {{- include "volume-config.labels" . | nindent 4 }}
+spec:
+  capacity:
+    storage: {{ .Values.deployment.volumeConfig.nfsStorage }}
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+  claimRef:
+    name: {{ .Values.deployment.volumeConfig.loggingVolumeName | quote }}
+    namespace: {{ .Release.Namespace }}
+  nfs:
+    server: {{ $nfsServer | quote }}
+    path: {{ printf "%s/%s" .Values.deployment.volumeConfig.nfsRootPath .Values.deployment.volumeConfig.loggingVolumeName | quote }}

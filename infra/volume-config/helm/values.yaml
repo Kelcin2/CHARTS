@@ -1,0 +1,38 @@
+# Default values for volume-config.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+deployment:
+  volumeConfig:
+    image: busybox
+    imageTag: 1.36.1
+    configVolumeName: config-volume
+    dataVolumeName: data-volume
+    loggingVolumeName: logging-volume
+    nfsRootPath: /opt/nfs-storage
+    nfsStorage: 100Gi
+    nfsServer:
+      svcNamespace: kelcin-nfs-server
+      svcName: nfs-server-svc
+      host:
+    resources:
+      limits:
+        cpu: 100m
+        memory: 20Mi
+      requests:
+        cpu: 50m
+        memory: 10Mi
