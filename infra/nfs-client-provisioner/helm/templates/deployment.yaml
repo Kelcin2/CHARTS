@@ -31,7 +31,7 @@ spec:
       serviceAccountName: {{ .Values.deployment.nfsClientProvisioner.serviceAccountName }}
       containers:
         - name: nfs-client-provisioner
-          image: "{{ .Values.deployment.nfsClientProvisioner.image }}:{{ .Values.deployment.nfsClientProvisioner.imageTag }}"
+          image: {{ .Values.deployment.nfsClientProvisioner.image }}:{{ .Values.deployment.nfsClientProvisioner.imageTag }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
           - name: PROVISIONER_NAME

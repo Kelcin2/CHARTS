@@ -28,7 +28,7 @@ spec:
       {{- end }}
       containers:
         - name: nfs-server
-          image: "{{ .Values.deployment.nfsServer.image }}:{{ .Values.deployment.nfsServer.imageTag }}"
+          image: {{ .Values.deployment.nfsServer.image }}:{{ .Values.deployment.nfsServer.imageTag }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           securityContext:
             capabilities:
