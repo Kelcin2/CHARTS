@@ -33,63 +33,31 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: pvc-nfs-server-rw
+  name: pvc-nfs-server
 spec:
   resources:
     requests:
-      storage: {{ .Values.deployment.nfsServer.rwStorage }}
+      storage: {{ .Values.deployment.nfsServer.storage }}
   accessModes:
     - ReadWriteMany
   storageClassName: ""
   volumeMode: Filesystem
-  volumeName: pv-nfs-server-rw
+  volumeName: pv-nfs-server
 ---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: pv-nfs-server-rw
+  name: pv-nfs-server
 spec:
   capacity:
-    storage: {{ .Values.deployment.nfsServer.rwStorage }}
+    storage: {{ .Values.deployment.nfsServer.storage }}
   accessModes:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
   volumeMode: Filesystem
   claimRef:
-    name: pvc-nfs-server-rw
+    name: pvc-nfs-server
     namespace: {{ .Release.Namespace }}
   hostPath:
-    path: {{ .Values.deployment.nfsServer.hostPath.write }}
-    type: DirectoryOrCreate
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: pvc-nfs-server-ro
-spec:
-  resources:
-    requests:
-      storage: {{ .Values.deployment.nfsServer.roStorage }}
-  accessModes:
-    - ReadOnlyMany
-  storageClassName: ""
-  volumeMode: Filesystem
-  volumeName: pv-nfs-server-ro
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: pv-nfs-server-ro
-spec:
-  capacity:
-    storage: {{ .Values.deployment.nfsServer.roStorage }}
-  accessModes:
-    - ReadOnlyMany
-  persistentVolumeReclaimPolicy: Retain
-  volumeMode: Filesystem
-  claimRef:
-    name: pvc-nfs-server-ro
-    namespace: {{ .Release.Namespace }}
-  hostPath:
-    path: {{ .Values.deployment.nfsServer.hostPath.read }}
+    path: {{ .Values.deployment.nfsServer.hostPath }}
     type: DirectoryOrCreate

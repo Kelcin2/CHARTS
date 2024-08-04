@@ -84,11 +84,8 @@ spec:
               mountPath: /etc/exports
               subPath: exports
               readOnly: true
-            - name: read-only
-              mountPath: /opt/nfs/ro
-              readOnly: true
-            - name: read-write
-              mountPath: /opt/nfs/rw
+            - name: nfs
+              mountPath: /opt/nfs
       volumes:
         - name: load-module
           persistentVolumeClaim:
@@ -99,11 +96,8 @@ spec:
             items:
               - key: exports.txt
                 path: exports
-        - name: read-only
+        - name: nfs
           persistentVolumeClaim:
-            claimName: pvc-nfs-server-ro
-        - name: read-write
-          persistentVolumeClaim:
-            claimName: pvc-nfs-server-rw
+            claimName: pvc-nfs-server
       nodeSelector:
         {{- toYaml .Values.deployment.nfsServer.nodeSelector | nindent 8 }}

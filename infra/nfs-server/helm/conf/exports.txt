@@ -1,2 +1,1 @@
-/opt/nfs/rw *(rw,insecure,no_root_squash,no_subtree_check)
-/opt/nfs/ro *(ro,insecure,no_root_squash,no_subtree_check)
+/opt/nfs *(rw,insecure,no_root_squash,no_subtree_check)

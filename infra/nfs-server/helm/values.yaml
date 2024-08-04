@@ -44,10 +44,7 @@ deployment:
       requests:
         cpu: 200m
         memory: 200Mi
-    hostPath:
-      write: /opt/nfs-storage/readWrite
-      read: /opt/nfs-storage/readOnly
+    hostPath: /opt/nfs-storage
+    storage: 100Gi
     nodeSelector:
       kelcin-nfs-server: "true"
-    roStorage: 100Gi
-    rwStorage: 100Gi
