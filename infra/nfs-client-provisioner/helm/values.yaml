@@ -37,7 +37,7 @@ deployment:
     imageTag: v4.0.2
     serviceAccountName: "nfs-client-provisioner-sa"
     provisionerName: "k8s-kelcin.io/nfs-client-provisioner"
-    nfsRootPath: /opt/nfs/rw
+    nfsRootPath: /opt/nfs
     nfsStorage: 100Gi
     nfsServer:
       svcNamespace: kelcin-nfs-server

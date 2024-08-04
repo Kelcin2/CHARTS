@@ -3,3 +3,5 @@
 `helm install -n kelcin-nfs-client-provisioner nfs-client-provisioner ./nfs-client-provisioner-1.0.0.tgz --debug --dry-run=server`
 `helm install -n kelcin-nfs-client-provisioner nfs-client-provisioner ./nfs-client-provisioner-1.0.0.tgz`
 
+#### How to uninstall
+`helm uninstall -n kelcin-nfs-client-provisioner nfs-client-provisioner`
