@@ -6,4 +6,4 @@ metadata:
     {{- include "nfs-server.labels" . | nindent 4 }}
 data:
   exports.txt: |-
-    {{- .Files.Get "conf/exports.txt" | nindent 4 }}
+    {{- tpl (.Files.Get "conf/exports.txt") . | nindent 4 }}

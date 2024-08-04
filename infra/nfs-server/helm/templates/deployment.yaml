@@ -85,7 +85,7 @@ spec:
               subPath: exports
               readOnly: true
             - name: nfs
-              mountPath: /opt/nfs
+              mountPath: {{ .Values.deployment.nfsServer.hostPath }}
       volumes:
         - name: load-module
           persistentVolumeClaim:
