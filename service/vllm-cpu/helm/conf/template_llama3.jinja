@@ -1,0 +1,14 @@
+{%- set loop_messages = messages %}
+{%- for message in loop_messages %}
+    {%- set content = '<|start_header_id|>' + message['role'] + '<|end_header_id|>\n\n'+ message['content'] | trim %}
+    {%- if loop.index0 == 0 %}
+        {%- set content = bos_token + content %}
+    {%- endif %}
+    {%- if not (loop.last and message['role'] == 'assistant') %}
+        {%- set content = content + '<|eot_id|>' %}
+    {%- endif %}
+    {{- content }}
+{%- endfor %}
+{%- if messages[-1]['role'] != 'assistant' %}
+    {{- '<|start_header_id|>assistant<|end_header_id|>\n\n' }}
+{%- endif %}

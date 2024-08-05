@@ -1,0 +1,18 @@
+deployment:
+  vllm:
+    image: kelcin-vllm-cpu-env
+    imageTag: 2.0.0
+    modelDir: Qwen2-0.5B-Instruct
+    servedModelName: Qwen2-0.5B-Instruct
+    args:
+      - "--max-model-len"
+      - "8192"
+    vllmCpuKvcacheSpace: 4
+    resources:
+      limits:
+        cpu: 8
+        memory: 18Gi
+      requests:
+        cpu: 8
+        memory: 15Gi
+      customChatTemplate:

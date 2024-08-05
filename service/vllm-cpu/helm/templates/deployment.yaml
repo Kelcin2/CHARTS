@@ -1,0 +1,128 @@
+{{- $customChatTemplateFileName := "" -}}
+{{- if .Values.deployment.vllm.customChatTemplate }}
+{{- $customChatTemplateFileName = include "vllm-cpu.getChatTemplateFileName" . -}}
+{{- end  -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-cpu
+  labels:
+    {{- include "vllm-cpu.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "vllm-cpu.selectorLabels" . | nindent 6 }}
+      app: vllm-cpu
+  template:
+    metadata:
+      labels:
+        {{- include "vllm-cpu.selectorLabels" . | nindent 8 }}
+        app: vllm-cpu
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.deployment.vllm.useGPU }}
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+      {{- end }}
+      containers:
+        - name: vllm
+          image: {{ .Values.deployment.vllm.image }}:{{ .Values.deployment.vllm.imageTag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 8000
+              name: openai-port
+          livenessProbe:
+            httpGet:
+              scheme: HTTP
+              path: /v1/models
+              port: 8000
+            initialDelaySeconds: 600
+            timeoutSeconds: 1
+            periodSeconds: 900
+            successThreshold: 1
+            failureThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /v1/models
+              port: 8000
+              scheme: HTTP
+            initialDelaySeconds: 180
+            periodSeconds: 60
+            failureThreshold: 3
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            {{- if not .Values.deployment.vllm.useGPU }}
+            {{- toYaml .Values.deployment.vllm.resources | nindent 12 }}
+            {{- else }}
+            limits:
+              nvidia.com/gpu: {{ .Values.deployment.vllm.gpuNum }}
+            {{- end }}
+          {{- if eq "1.0.0" .Values.deployment.vllm.imageTag }}
+          command:
+            - python3
+            - -m
+            - vllm.entrypoints.openai.api_server
+          {{- end }}
+          args:
+            - --served-model-name
+            - {{.Values.deployment.vllm.servedModelName}}
+            - --model
+            - /workspace/models/{{.Values.deployment.vllm.modelDir}}
+            {{- if .Values.deployment.vllm.customChatTemplate }}
+            - --chat-template
+            - /workspace/chatTemplate/{{ $customChatTemplateFileName }}
+            {{- end }}
+            {{- range .Values.deployment.vllm.args }}
+            - {{ . | quote }}
+            {{- end }}
+          env:
+            - name: TZ
+              value: "Asia/Shanghai"
+            - name: VLLM_CPU_KVCACHE_SPACE
+              value: {{ .Values.deployment.vllm.vllmCpuKvcacheSpace | quote }}
+          volumeMounts:
+            - name: config
+              mountPath: /workspace/models
+              subPath: vllm/models
+              readOnly: true
+            - name: cache-volume
+              mountPath: /.cache/huggingface
+            {{- if .Values.deployment.vllm.customChatTemplate }}
+            - name: custom-template
+              mountPath: /workspace/chatTemplate/{{ $customChatTemplateFileName }}
+              subPath: {{ $customChatTemplateFileName | quote }}
+              readOnly: true
+            {{- end }}
+      nodeSelector:
+        {{- toYaml .Values.deployment.vllm.nodeSelector | nindent 8 }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: {{ .Values.deployment.vllm.configVolumeName }}
+        - emptyDir: {}
+          name: cache-volume
+        {{- if .Values.deployment.vllm.customChatTemplate }}
+        - name: custom-template
+          configMap:
+            name: custom-chat-template-cm
+            items:
+            - key: {{ $customChatTemplateFileName | quote }}
+              path: {{ $customChatTemplateFileName | quote }}
+        {{- end }}

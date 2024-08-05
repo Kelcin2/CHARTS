@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: vllm-cpu-svc
+  labels:
+    {{- include "vllm-cpu.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: openai-port
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "vllm-cpu.selectorLabels" . | nindent 4 }}
+    app: vllm-cpu

@@ -1,0 +1,18 @@
+deployment:
+  vllm:
+    image: kelcin-vllm-cpu-env
+    imageTag: 1.0.0
+    modelDir: Meta-Llama-3-8B-Instruct
+    servedModelName: llama3
+    args:
+      - "--max-model-len"
+      - "8192"
+    vllmCpuKvcacheSpace: 4
+    resources:
+      limits:
+        cpu: 10
+        memory: 22Gi
+      requests:
+        cpu: 10
+        memory: 22Gi
+    customChatTemplate: llama3

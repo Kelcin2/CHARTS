@@ -1,0 +1,12 @@
+{{- if .Values.deployment.vllm.customChatTemplate }}
+{{- $customChatTemplateFileName := include "vllm-cpu.getChatTemplateFileName" . -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: custom-chat-template-cm
+  labels:
+    {{- include "vllm-cpu.labels" . | nindent 4 }}
+data:
+  {{ $customChatTemplateFileName }}: |-
+    {{-  printf "conf/%s" $customChatTemplateFileName | .Files.Get | nindent 4 }}
+{{- end }}
