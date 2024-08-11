@@ -57,6 +57,7 @@ deployment:
     servedModelName: Qwen2-0.5B-Instruct
     useGPU: false
     gpuNum: 1
+    tz: "Asia/Shanghai"
     args:
       - "--max-model-len"
       - "8192"

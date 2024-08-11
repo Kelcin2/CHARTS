@@ -86,7 +86,7 @@ spec:
             {{- end }}
           env:
             - name: TZ
-              value: "Asia/Shanghai"
+              value: {{ .Values.deployment.vllm.tz | quote }}
             - name: VLLM_CPU_KVCACHE_SPACE
               value: {{ .Values.deployment.vllm.vllmCpuKvcacheSpace | quote }}
           volumeMounts:
