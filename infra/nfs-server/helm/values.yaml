@@ -37,13 +37,15 @@ deployment:
   nfsServer:
     image: erichough/nfs-server
     imageTag: 2.2.1
+    onlyNFSv4: false
+    debugInfo: true
     resources:
       limits:
-        cpu: 400m
-        memory: 400Mi
+        cpu: 4
+        memory: 4Gi
       requests:
-        cpu: 200m
-        memory: 200Mi
+        cpu: 2
+        memory: 2Gi
     hostPath: /opt/nfs-storage
     storage: 100Gi
     nodeSelector:

@@ -40,6 +40,7 @@ deployment:
     nfsRootPath: /opt/nfs-storage
     nfsStorage: 100Gi
     nfsServer:
+      version:
       svcNamespace: kelcin-nfs-server
       svcName: nfs-server-svc
       host:

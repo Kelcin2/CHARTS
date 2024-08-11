@@ -34,6 +34,7 @@ spec:
   nfs:
     server: {{ $nfsServer | quote }}
     path: {{ .Values.deployment.volumeConfig.nfsRootPath | quote }}
+  {{- include "volume-config.getNfsServerVersionOption" . | nindent 2 }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -71,6 +72,7 @@ spec:
     server: {{ $nfsServer | quote }}
     path: {{ printf "%s/%s" .Values.deployment.volumeConfig.nfsRootPath .Values.deployment.volumeConfig.configVolumeName | quote }}
     readOnly: true
+  {{- include "volume-config.getNfsServerVersionOption" . | nindent 2 }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -107,6 +109,7 @@ spec:
   nfs:
     server: {{ $nfsServer | quote }}
     path: {{ printf "%s/%s" .Values.deployment.volumeConfig.nfsRootPath .Values.deployment.volumeConfig.dataVolumeName | quote }}
+  {{- include "volume-config.getNfsServerVersionOption" . | nindent 2 }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -143,3 +146,4 @@ spec:
   nfs:
     server: {{ $nfsServer | quote }}
     path: {{ printf "%s/%s" .Values.deployment.volumeConfig.nfsRootPath .Values.deployment.volumeConfig.loggingVolumeName | quote }}
+  {{- include "volume-config.getNfsServerVersionOption" . | nindent 2 }}

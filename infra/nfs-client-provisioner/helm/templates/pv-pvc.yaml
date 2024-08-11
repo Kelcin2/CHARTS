@@ -30,3 +30,4 @@ spec:
   nfs:
     server: {{ $nfsServer | quote }}
     path: {{ .Values.deployment.nfsClientProvisioner.nfsRootPath | quote }}
+  {{- include "nfs-client-provisioner.getNfsServerVersionOption" . | nindent 2 }}

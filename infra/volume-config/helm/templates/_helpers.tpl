@@ -82,3 +82,13 @@ Get NFS Server IP
 {{ print $nfsServer }}
 {{- end -}}
 {{- end }}
+
+{{/*
+Get NFS version option
+*/}}
+{{- define "volume-config.getNfsServerVersionOption" -}}
+{{- if .Values.deployment.volumeConfig.nfsServer.version }}
+mountOptions:
+  - nfsvers={{ .Values.deployment.volumeConfig.nfsServer.version }}
+{{- end }}
+{{- end }}

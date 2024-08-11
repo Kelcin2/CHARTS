@@ -16,6 +16,7 @@ spec:
       port: 2049
       protocol: UDP
       targetPort: udp-2049
+    {{- if .Values.deployment.nfsServer.onlyNFSv4 | not }}
     - name: tcp-111
       port: 111
       protocol: TCP
@@ -40,6 +41,7 @@ spec:
       port: 32767
       protocol: UDP
       targetPort: udp-32767
+    {{- end }}
   selector:
     {{- include "nfs-server.selectorLabels" . | nindent 4 }}
     app: nfs-server
