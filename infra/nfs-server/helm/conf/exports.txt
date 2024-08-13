@@ -1,1 +1,1 @@
-{{ .Values.deployment.nfsServer.hostPath }} *(rw,sync,insecure,no_root_squash,no_subtree_check)
+{{ .Values.deployment.nfsServer.hostPath }} *(rw,async,insecure,no_root_squash,no_subtree_check)
