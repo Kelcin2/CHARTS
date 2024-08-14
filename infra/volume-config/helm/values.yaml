@@ -23,6 +23,8 @@ deployment:
     configVolumeName: config-volume
     dataVolumeName: data-volume
     loggingVolumeName: logging-volume
+    dataHostPathVolumeName: data-host-path-volume
+    loggingHostPathVolumeName: logging-host-path-volume
     nfsRootPath: /opt/nfs-storage
     nfsStorage: 100Gi
     nfsServer:
