@@ -1,4 +1,4 @@
-# Default values for nfs-server.
+# Default values for mysql.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -22,9 +22,9 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
-podAnnotations: {}
 service:
-  type: ClusterIP
+  type: NodePort
+  port: 3306
 
 autoscaling:
   enabled: false
@@ -33,20 +33,24 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
 
+
 deployment:
-  nfsServer:
-    image: erichough/nfs-server
-    imageTag: 2.2.1
-    onlyNFSv4: false
-    debugInfo: true
+  mysql:
+    image: mysql
+    imageTag: 8.3.0
+    tz: "Asia/Shanghai"
+    root: 1007
     resources:
       limits:
-        cpu: 2
-        memory: 2Gi
-      requests:
         cpu: 1
         memory: 1Gi
-    hostPath: /opt/nfs-storage
-    storage: 100Gi
+      requests:
+        cpu: 500m
+        memory: 500Mi
+    configVolumeName: config-volume
+    dataVolumeName: data-host-path-volume
+    loggingVolumeName: logging-host-path-volume
     nodeSelector:
       kelcin-nfs-server: "true"
+    args:
+    - "--character-set-server=utf8mb4"

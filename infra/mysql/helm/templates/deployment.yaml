@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  labels:
+    {{- include "mysql.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "mysql.selectorLabels" . | nindent 6 }}
+      app: mysql
+  template:
+    metadata:
+      labels:
+        {{- include "mysql.labels" . | nindent 8 }}
+        app: mysql
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: mysql
+          image: {{ .Values.deployment.mysql.image }}:{{ .Values.deployment.mysql.imageTag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+          - name: standard
+            containerPort: 3306
+            protocol: TCP
+          env:
+          - name: TZ
+            value: {{ .Values.deployment.mysql.tz | quote }}
+          - name: MYSQL_ROOT_PASSWORD_FILE
+            value: /run/secrets/kelcin/mysql-root
+          args:
+          {{- range .Values.deployment.mysql.args }}
+          - {{ . | quote }}
+          {{- end }}
+          livenessProbe:
+            exec:
+              command:
+              - sh
+              - -c
+              - "OUTPUT_STR=$(mysqladmin ping -p\"$(cat /run/secrets/kelcin/mysql-root)\" --connect-timeout=1 2>&1); if echo \"$OUTPUT_STR\" | grep -q \"mysqld is alive\"; then exit 0; else exit 1; fi"
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+            timeoutSeconds: 1
+          readinessProbe:
+            exec:
+              command:
+              - sh
+              - -c
+              - "OUTPUT_STR=$(mysqladmin ping -p\"$(cat /run/secrets/kelcin/mysql-root)\" --connect-timeout=1 2>&1); if echo \"$OUTPUT_STR\" | grep -q \"mysqld is alive\"; then exit 0; else exit 1; fi"
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+            timeoutSeconds: 1
+          resources:
+            {{- toYaml .Values.deployment.mysql.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+              subPath: mysql/datadir
+            - name: root
+              mountPath: /run/secrets/kelcin/mysql-root
+              subPath: mysql_root_password
+              readOnly: true
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ .Values.deployment.mysql.dataVolumeName }}
+        - name: root
+          secret:
+            secretName: mysql-secret
+            items:
+              - key: mysql_root_password
+                path: mysql_root_password
+      nodeSelector:
+        {{- toYaml .Values.deployment.mysql.nodeSelector | nindent 8 }}
