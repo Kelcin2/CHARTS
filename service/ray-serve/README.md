@@ -9,5 +9,5 @@
 ### How to expose service port to host machine for being accessed by postman or other REST Client
 `kubectl port-forward --address 0.0.0.0 service/ray-serve-svc 8000:80`
 
-### How to expose dashboard port to host machine for being accessed by postman or other REST Client
+### How to expose dashboard port to host machine for being accessed by pokubectl port-forward --address 0.0.0.0 service/ray-serve-svc 8000:80stman or other REST Client
 `kubectl port-forward --address 0.0.0.0 service/ray-serve-svc 8265:8265`

@@ -40,6 +40,7 @@ deployment:
         memory: 8Gi
     modelConfig:
       maxOngoingRequests: 100
+      logLevel: DEBUG
       numCpus: 3
       models:
       - name: opus-mt-en-zh

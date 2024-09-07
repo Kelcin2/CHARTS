@@ -1,5 +1,6 @@
 {{- $models := include "ray-serve.CalModelConfig" . | fromJsonArray -}}
 {{- $maxOngoingRequests := .Values.deployment.rayServe.modelConfig.maxOngoingRequests -}}
+{{- $logLevel := .Values.deployment.rayServe.modelConfig.logLevel -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -37,6 +38,8 @@ data:
       deployments:
       - name: {{ .type }}
         max_ongoing_requests: {{ "maxOngoingRequests" | hasKey . | ternary .maxOngoingRequests $maxOngoingRequests }}
+        logging_config:
+          log_level: {{ "logLevel" | hasKey . | ternary .logLevel $logLevel }}
         ray_actor_options:
         {{- if "numGpus" | hasKey . }}
           num_gpus: {{ .numGpus }}

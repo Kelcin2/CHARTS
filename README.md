@@ -28,7 +28,7 @@
    `chmod +x ~/.minikube/files/etc/rc.local`
 4. restart the minikube
 
-
-
-
+#### How to clean minikube cache to prevent from insufficiency disk space
+1. locate directory `~/.minikube/cache`
+2. delete some cache data according to your own situation such as images `rm -rf ~/.minikube/cache/images/amd64/*`
 
