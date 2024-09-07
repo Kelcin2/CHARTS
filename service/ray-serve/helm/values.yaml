@@ -1,0 +1,53 @@
+# Default values for ray-serve.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 80
+  dashboardPort: 8265
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+deployment:
+  rayServe:
+    image: kelcin-ray-serve
+    imageTag: 1.0.0
+    tz: "Asia/Shanghai"
+    configVolumeName: config-volume
+    dataVolumeName: data-volume
+    loggingVolumeName: logging-volume
+    resources:
+      limits:
+        cpu: 5
+        memory: 10Gi
+      requests:
+        cpu: 4
+        memory: 8Gi
+    modelConfig:
+      maxOngoingRequests: 100
+      numCpus: 3
+      models:
+      - name: opus-mt-en-zh
+        type: Translator
+        enabled: true
+      - name: opus-mt-zh-en
+        type: Translator
+        enabled: true
+      - name: multilingual-e5-large-instruct
+        type: Embedding
+        enabled: true

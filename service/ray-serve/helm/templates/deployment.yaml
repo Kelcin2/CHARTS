@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ray-serve
+  labels:
+    {{- include "ray-serve.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "ray-serve.selectorLabels" . | nindent 6 }}
+      app: ray-serve
+  template:
+    metadata:
+      labels:
+        {{- include "ray-serve.labels" . | nindent 8 }}
+        app: ray-serve
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: ray-serve
+          image: {{ .Values.deployment.rayServe.image }}:{{ .Values.deployment.rayServe.imageTag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+          - /bin/bash
+          - -c
+          args:
+          - "ray start --head --dashboard-host 0.0.0.0 --dashboard-port 8265 && serve run /workspace/ray-serve-config.yaml"
+          ports:
+          - name: ray-serve-port
+            containerPort: 8000
+            protocol: TCP
+          - name: dashboard-port
+            containerPort: 8265
+            protocol: TCP
+          livenessProbe:
+            httpGet:
+              scheme: HTTP
+              path: /health
+              port: ray-serve-port
+            initialDelaySeconds: 600
+            timeoutSeconds: 1
+            periodSeconds: 900
+            successThreshold: 1
+            failureThreshold: 1
+          readinessProbe:
+            httpGet:
+              scheme: HTTP
+              path: /health
+              port: ray-serve-port
+            initialDelaySeconds: 120
+            periodSeconds: 60
+            failureThreshold: 3
+            successThreshold: 1
+            timeoutSeconds: 1
+          env:
+          - name: TZ
+            value: {{ .Values.deployment.rayServe.tz | quote }}
+          - name: HF_HOME
+            value: "/tmp/.cache/huggingface/hub"
+          resources:
+            {{- toYaml .Values.deployment.rayServe.resources | nindent 12 }}
+          volumeMounts:
+          - name: dshm
+            mountPath: /dev/shm
+          - name: config
+            mountPath: /models
+            subPath: ray-serve/models
+            readOnly: true
+          - name: serve-config
+            mountPath: /workspace/ray-serve-config.yaml
+            subPath: ray-serve-config.yaml
+            readOnly: true
+      volumes:
+      - name: dshm
+        emptyDir:
+          sizeLimit: "5G"
+      - name: config
+        persistentVolumeClaim:
+          claimName: {{ .Values.deployment.rayServe.configVolumeName }}
+      - name: serve-config
+        configMap:
+          name: ray-serve-config-cm
+          items:
+          - key: serve_config
+            path: ray-serve-config.yaml
