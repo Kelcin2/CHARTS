@@ -1,20 +1,24 @@
+{{- range $groupName, $group := .Values.deployment.rayServe.modelConfig.models }}
+{{- $g := include "ray-serve.standardizeGroupName" (dict "group" $groupName) -}}
 apiVersion: v1
 kind: Service
 metadata:
-  name: ray-serve-svc
+  name: ray-serve-svc{{ $g }}
   labels:
-    {{- include "ray-serve.labels" . | nindent 4 }}
+    {{- include "ray-serve.labels" $ | nindent 4 }}
 spec:
-  type: {{ .Values.service.type }}
+  type: {{ $.Values.service.type }}
   ports:
-  - port: {{ .Values.service.port }}
+  - port: {{ $.Values.service.port }}
     targetPort: ray-serve-port
     protocol: TCP
     name: service
-  - port: {{ .Values.service.dashboardPort }}
+  - port: {{ $.Values.service.dashboardPort }}
     targetPort: dashboard-port
     protocol: TCP
     name: dashboard
   selector:
-    {{- include "ray-serve.selectorLabels" . | nindent 4 }}
-    app: ray-serve
+    {{- include "ray-serve.selectorLabels" $ | nindent 4 }}
+    app: ray-serve{{ $g }}
+---
+{{- end }}

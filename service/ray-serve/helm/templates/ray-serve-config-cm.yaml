@@ -1,12 +1,19 @@
-{{- $models := include "ray-serve.CalModelConfig" . | fromJsonArray -}}
 {{- $maxOngoingRequests := .Values.deployment.rayServe.modelConfig.maxOngoingRequests -}}
 {{- $logLevel := .Values.deployment.rayServe.modelConfig.logLevel -}}
+{{- $type := .Values.deployment.rayServe.modelConfig.type -}}
+{{- $beamSize := .Values.deployment.rayServe.modelConfig.beamSize -}}
+{{- $quantization := .Values.deployment.rayServe.modelConfig.quantization -}}
+{{- $patience := .Values.deployment.rayServe.modelConfig.patience -}}
+{{- $maxPositionEmbeddings := .Values.deployment.rayServe.modelConfig.maxPositionEmbeddings -}}
+{{- range $groupName, $group := .Values.deployment.rayServe.modelConfig.models }}
+{{- $g := include "ray-serve.standardizeGroupName" (dict "group" $groupName) -}}
+{{- $models := include "ray-serve.CalModelConfig" (dict "Values" $.Values "group" $groupName) | fromJsonArray -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: ray-serve-config-cm
+  name: ray-serve-config-cm{{ $g }}
   labels:
-    {{- include "ray-serve.labels" . | nindent 4 }}
+    {{- include "ray-serve.labels" $ | nindent 4 }}
 data:
   serve_config: |-
     proxy_location: EveryNode
@@ -32,11 +39,12 @@ data:
         health_name: Health
         app_num: {{ $models | len | quote }}
     {{- range $models }}
+    {{- $modelType := "type" | hasKey . | ternary .type $type }}
     - name: {{ .name }}
       route_prefix: /{{ .name }}
       import_path: ray-serve:app_builder
       deployments:
-      - name: {{ .type }}
+      - name: {{ $modelType }}
         max_ongoing_requests: {{ "maxOngoingRequests" | hasKey . | ternary .maxOngoingRequests $maxOngoingRequests }}
         logging_config:
           log_level: {{ "logLevel" | hasKey . | ternary .logLevel $logLevel }}
@@ -48,6 +56,14 @@ data:
           num_cpus: {{ .numCpus }}
         {{- end }}
       args:
-        type: {{ .type }}
+        type: {{ $modelType }}
         model_path: /models/{{ .name }}
+        {{- if "Translator" | eq $modelType }}
+        max_position_embeddings: {{ "maxPositionEmbeddings" | hasKey . | ternary .maxPositionEmbeddings $maxPositionEmbeddings | quote }}
+        qnt: {{ "quantization" | hasKey . | ternary .quantization $quantization | quote }}
+        beam_size: {{ "beamSize" | hasKey . | ternary .beamSize $beamSize | quote }}
+        patience: {{ "patience" | hasKey . | ternary .patience $patience | quote }}
+        {{- end }}
     {{- end }}
+---
+{{- end }}

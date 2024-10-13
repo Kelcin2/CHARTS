@@ -2,7 +2,7 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-replicaCount: 1
+replicas: 1
 
 image:
   pullPolicy: IfNotPresent
@@ -41,14 +41,21 @@ deployment:
     modelConfig:
       maxOngoingRequests: 100
       logLevel: DEBUG
+      type: Translator
+      # float16 or float32
+      quantization: float16
+      beamSize: 3
+      patience: 1
+      # MUST less than or equal to the atrribute max_position_embeddings in config.json of respective model
+      maxPositionEmbeddings: 512
       numCpus: 3
       models:
-      - name: opus-mt-en-zh
-        type: Translator
-        enabled: true
-      - name: opus-mt-zh-en
-        type: Translator
-        enabled: true
-      - name: multilingual-e5-large-instruct
-        type: Embedding
-        enabled: true
+        rayServe:
+          models:
+          - name: opus-mt-en-zh
+            enabled: true
+          - name: opus-mt-zh-en
+            enabled: true
+          - name: multilingual-e5-large-instruct
+            type: Embedding
+            enabled: true

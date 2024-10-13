@@ -128,7 +128,10 @@ Calculate model config
 */}}
 {{- define "ray-serve.CalModelConfig" -}}
 {{- $models := list -}}
-{{- range .Values.deployment.rayServe.modelConfig.models }}
+{{- if .group | hasKey .Values.deployment.rayServe.modelConfig.models | not }}
+{{- printf "can't find the group `%s`" .group | fail -}}
+{{- end }}
+{{- range "models" | get (get .Values.deployment.rayServe.modelConfig.models .group) }}
 {{- if include "ray-serve.modelEnabled" . | eq "true" }}
 {{- $models = . | append $models -}}
 {{- end }}
@@ -136,4 +139,17 @@ Calculate model config
 {{- $models = include "ray-serve.CalXpus" (dict "Values" .Values "type" "gpu" "models" $models) | fromJsonArray -}}
 {{- $models = include "ray-serve.CalXpus" (dict "Values" .Values "type" "cpu" "models" $models) | fromJsonArray -}}
 {{- $models | toJson | print -}}
+{{- end }}
+
+{{/*
+Standardize the group name
+*/}}
+{{- define "ray-serve.standardizeGroupName" -}}
+  {{- if "group" | hasKey . | not }}
+  {{- print "" -}}
+  {{- else if eq "rayServe" .group  }}
+  {{- print "" -}}
+  {{- else }}
+  {{- .group | snakecase | replace "_" "-" | lower | printf "-%s" -}}
+  {{- end }}
 {{- end }}

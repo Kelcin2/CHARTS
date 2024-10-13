@@ -1,31 +1,34 @@
+{{- $replicas := .Values.replicas -}}
+{{- range $groupName, $group := .Values.deployment.rayServe.modelConfig.models }}
+{{- $g := include "ray-serve.standardizeGroupName" (dict "group" $groupName) -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ray-serve
+  name: ray-serve{{ $g }}
   labels:
-    {{- include "ray-serve.labels" . | nindent 4 }}
+    {{- include "ray-serve.labels" $ | nindent 4 }}
 spec:
-  {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.replicaCount }}
+  {{- if not $.Values.autoscaling.enabled }}
+  replicas: {{ "replicas" | hasKey $group | ternary $group.replicas $replicas }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "ray-serve.selectorLabels" . | nindent 6 }}
-      app: ray-serve
+      {{- include "ray-serve.selectorLabels" $ | nindent 6 }}
+      app: ray-serve{{ $g }}
   template:
     metadata:
       labels:
-        {{- include "ray-serve.labels" . | nindent 8 }}
-        app: ray-serve
+        {{- include "ray-serve.labels" $ | nindent 8 }}
+        app: ray-serve{{ $g }}
     spec:
-      {{- with .Values.imagePullSecrets }}
+      {{- with $.Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
         - name: ray-serve
-          image: {{ .Values.deployment.rayServe.image }}:{{ .Values.deployment.rayServe.imageTag }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: {{ $.Values.deployment.rayServe.image }}:{{ $.Values.deployment.rayServe.imageTag }}
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
           command:
           - /bin/bash
           - -c
@@ -39,32 +42,32 @@ spec:
             containerPort: 8265
             protocol: TCP
           livenessProbe:
-            httpGet:
-              scheme: HTTP
-              path: /health
-              port: ray-serve-port
-            initialDelaySeconds: 600
+            exec:
+              command:
+              - /bin/bash
+              - /health/livenessCheck.sh
+            initialDelaySeconds: 300
             timeoutSeconds: 1
-            periodSeconds: 900
+            periodSeconds: 60
             successThreshold: 1
-            failureThreshold: 1
+            failureThreshold: 3
           readinessProbe:
             httpGet:
               scheme: HTTP
               path: /health
               port: ray-serve-port
             initialDelaySeconds: 120
-            periodSeconds: 60
+            periodSeconds: 30
             failureThreshold: 3
             successThreshold: 1
             timeoutSeconds: 1
           env:
           - name: TZ
-            value: {{ .Values.deployment.rayServe.tz | quote }}
+            value: {{ $.Values.deployment.rayServe.tz | quote }}
           - name: HF_HOME
             value: "/tmp/.cache/huggingface/hub"
           resources:
-            {{- toYaml .Values.deployment.rayServe.resources | nindent 12 }}
+            {{- toYaml $.Values.deployment.rayServe.resources | nindent 12 }}
           volumeMounts:
           - name: dshm
             mountPath: /dev/shm
@@ -76,16 +79,28 @@ spec:
             mountPath: /workspace/ray-serve-config.yaml
             subPath: ray-serve-config.yaml
             readOnly: true
+          - name: liveness-check
+            mountPath: /health
       volumes:
       - name: dshm
         emptyDir:
           sizeLimit: "5G"
       - name: config
         persistentVolumeClaim:
-          claimName: {{ .Values.deployment.rayServe.configVolumeName }}
+          claimName: {{ $.Values.deployment.rayServe.configVolumeName }}
       - name: serve-config
         configMap:
-          name: ray-serve-config-cm
+          name: ray-serve-config-cm{{ $g }}
           items:
           - key: serve_config
             path: ray-serve-config.yaml
+      - name: liveness-check
+        configMap:
+          name: ray-serve-liveness-check-cm{{ $g }}
+          items:
+          - key: config
+            path: config.txt
+          - key: livenessCheck
+            path: livenessCheck.sh
+---
+{{- end }}

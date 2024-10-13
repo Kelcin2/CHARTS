@@ -1,0 +1,70 @@
+{{- range $groupName, $group := .Values.deployment.rayServe.modelConfig.models }}
+{{- $g := include "ray-serve.standardizeGroupName" (dict "group" $groupName) -}}
+{{- $models := include "ray-serve.CalModelConfig" (dict "Values" $.Values "group" $groupName) | fromJsonArray -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ray-serve-liveness-check-cm{{ $g }}
+  labels:
+    {{- include "ray-serve.labels" $ | nindent 4 }}
+data:
+  config: |-
+    {{- $.Files.Get "conf/config.txt" | nindent 4 }}
+  livenessCheck: |-
+    #!/bin/bash
+    set -e
+
+    {{- range $i, $e := $models }}
+    MODELS[{{ $i }}]={{ .name }}
+    {{- end }}
+
+
+    MODEL_NUMBER=${#MODELS[@]}
+    SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+    CONFIG_PATH=${SCRIPT_DIR}/config.txt
+
+    get_input() {
+        grep "^$1" "${CONFIG_PATH}" | awk -F: '{print $2}'
+    }
+
+    SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+    CONFIG_PATH=${SCRIPT_DIR}/config.txt
+
+
+    HEALTH_CHECK_INDEX=0
+    HEALTH_CHECK_INDEX_FILE=/tmp/healthCheckIndex
+    if [ -e "${HEALTH_CHECK_INDEX_FILE}" ]; then
+        HEALTH_CHECK_INDEX=$(cat "${HEALTH_CHECK_INDEX_FILE}")
+    fi
+
+    MODEL_NAME=${MODELS["${HEALTH_CHECK_INDEX}"]}
+    INPUT=$(get_input ${MODEL_NAME})
+    PAYLOAD=$(cat <<EOF
+    {
+      "inputs": [
+        "$INPUT"
+      ]
+    }
+    EOF
+    )
+
+    API_URL="http://localhost:8000/${MODEL_NAME}"
+
+    RESPONSE=$(curl -s -X POST -H "Content-Type: application/json; charset=UTF-8" -d "$PAYLOAD" "$API_URL")
+
+    RESULT=$(echo $RESPONSE | grep results | wc -l)
+
+    if [ "$RESULT" -lt 1 ]; then
+      echo "it's unhealthy. error: $RESPONSE"
+      exit 1
+    fi
+
+    HEALTH_CHECK_INDEX=$((HEALTH_CHECK_INDEX + 1))
+    if [ "${HEALTH_CHECK_INDEX}" -ge ${MODEL_NUMBER} ]; then
+        HEALTH_CHECK_INDEX=0
+    fi
+
+    echo -n "${HEALTH_CHECK_INDEX}" > "${HEALTH_CHECK_INDEX_FILE}"
+    echo "it's healthy."
+---
+{{- end }}

@@ -1,0 +1,19 @@
+opus-mt-en-ROMANCE:>>fr<<hello
+opus-mt-ROMANCE-en:Bonjour
+opus-mt-en-de:hello
+opus-mt-de-en:Hallo
+opus-mt-en-es:hello
+opus-mt-es-en:Hola
+opus-mt-en-nl:hello
+opus-mt-nl-en:Hallo
+opus-tatoeba-en-tr:hello
+opus-mt-tc-big-tr-en:Merhaba
+opus-mt-en-el:>>el<<hello
+opus-mt-grk-en:Γειά σου
+opus-mt-en-sv:>>sv<<hello
+opus-mt-sv-en:Hallå
+opus-mt-en-zh:>>cmn_Hans<<hello
+opus-mt-zh-en:嗨
+opus-mt-en-gem:>>nob<<hello
+opus-mt-gem-en:hallo
+multilingual-e5-large-instruct:hello
