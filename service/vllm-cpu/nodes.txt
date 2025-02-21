@@ -3,7 +3,7 @@ docker build -f Dockerfile.cpu -t vllm-cpu-env:1.0.0 --shm-size=4g .
 
 docker build -f Dockerfile.cpu -t kelcin-vllm-cpu-env:1.0.0 --shm-size=12g .
 
-docker build -f Dockerfile.cpu -t kelcin-vllm-cpu-env:2.0.1 --shm-size=20g --build-arg HTTPS_PROXY=http://192.168.31.182:7890 --build-arg HTTP_PROXY=http://192.168.31.182:7890 --build-arg NO_PROXY=localhost,127.0.0.1,10.96.0.0/12,192.168.59.0/24,192.168.49.0/24,192.168.39.0/24 .
+docker build -f Dockerfile.cpu -t kelcin-vllm-cpu-env:v0.7.3 --shm-size=20g --build-arg HTTPS_PROXY=http://192.168.31.182:7890 --build-arg HTTP_PROXY=http://192.168.31.182:7890 --build-arg NO_PROXY=localhost,127.0.0.1,10.96.0.0/12,192.168.59.0/24,192.168.49.0/24,192.168.39.0/24 .
 
 docker run -it --ipc=host -p 8000:8000 --name my-vllm vllm-cpu-env:1.0.0
 docker run -d --ipc=host -p 8000:8000 --name my-vllm vllm-cpu-env:1.0.0

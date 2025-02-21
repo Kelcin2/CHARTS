@@ -1,7 +1,7 @@
 deployment:
   vllm:
     image: kelcin-vllm-cpu-env
-    imageTag: 1.0.0
+    imageTag: v0.7.3
     modelDir: Meta-Llama-3-8B-Instruct
     servedModelName: llama3
     args:
