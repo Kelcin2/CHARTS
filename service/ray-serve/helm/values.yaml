@@ -26,7 +26,7 @@ autoscaling:
 deployment:
   rayServe:
     image: kelcin-ray-serve
-    imageTag: 1.0.0
+    imageTag: 2.0.0
     tz: "Asia/Shanghai"
     configVolumeName: config-volume
     dataVolumeName: data-volume
@@ -46,15 +46,15 @@ deployment:
       quantization: float16
       beamSize: 3
       patience: 1
-      # MUST less than or equal to the atrribute max_position_embeddings in config.json of respective model
-      maxPositionEmbeddings: 512
       numCpus: 3
       models:
         rayServe:
           models:
           - name: opus-mt-en-zh
-            enabled: true
+            enabled: false
           - name: opus-mt-zh-en
+            enabled: true
+          - name: m2m100_418M
             enabled: true
           - name: multilingual-e5-large-instruct
             type: Embedding

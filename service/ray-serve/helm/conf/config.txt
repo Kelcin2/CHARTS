@@ -16,4 +16,5 @@ opus-mt-en-zh:>>cmn_Hans<<hello
 opus-mt-zh-en:嗨
 opus-mt-en-gem:>>nob<<hello
 opus-mt-gem-en:hallo
+m2m100_418M:>>zh<<hello
 multilingual-e5-large-instruct:hello

@@ -4,7 +4,6 @@
 {{- $beamSize := .Values.deployment.rayServe.modelConfig.beamSize -}}
 {{- $quantization := .Values.deployment.rayServe.modelConfig.quantization -}}
 {{- $patience := .Values.deployment.rayServe.modelConfig.patience -}}
-{{- $maxPositionEmbeddings := .Values.deployment.rayServe.modelConfig.maxPositionEmbeddings -}}
 {{- range $groupName, $group := .Values.deployment.rayServe.modelConfig.models }}
 {{- $g := include "ray-serve.standardizeGroupName" (dict "group" $groupName) -}}
 {{- $models := include "ray-serve.CalModelConfig" (dict "Values" $.Values "group" $groupName) | fromJsonArray -}}
@@ -59,7 +58,6 @@ data:
         type: {{ $modelType }}
         model_path: /models/{{ .name }}
         {{- if "Translator" | eq $modelType }}
-        max_position_embeddings: {{ "maxPositionEmbeddings" | hasKey . | ternary .maxPositionEmbeddings $maxPositionEmbeddings | quote }}
         qnt: {{ "quantization" | hasKey . | ternary .quantization $quantization | quote }}
         beam_size: {{ "beamSize" | hasKey . | ternary .beamSize $beamSize | quote }}
         patience: {{ "patience" | hasKey . | ternary .patience $patience | quote }}
