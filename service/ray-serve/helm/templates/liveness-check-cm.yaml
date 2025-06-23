@@ -41,7 +41,11 @@ data:
     INPUT=$(get_input ${MODEL_NAME})
     PAYLOAD=$(cat <<EOF
     {
-      "inputs": [
+      "input": [
+        "$INPUT"
+      ],
+      "query": "$INPUT",
+      "documents": [
         "$INPUT"
       ]
     }
@@ -52,7 +56,7 @@ data:
 
     RESPONSE=$(curl -s -X POST -H "Content-Type: application/json; charset=UTF-8" -d "$PAYLOAD" "$API_URL")
 
-    RESULT=$(echo $RESPONSE | grep results | wc -l)
+    RESULT=$(echo $RESPONSE | grep model | wc -l)
 
     if [ "$RESULT" -lt 1 ]; then
       echo "it's unhealthy. error: $RESPONSE"

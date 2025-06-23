@@ -26,7 +26,7 @@ autoscaling:
 deployment:
   rayServe:
     image: kelcin-ray-serve
-    imageTag: 2.0.0
+    imageTag: 3.0.0
     tz: "Asia/Shanghai"
     configVolumeName: config-volume
     dataVolumeName: data-volume
@@ -34,10 +34,10 @@ deployment:
     resources:
       limits:
         cpu: 5
-        memory: 10Gi
+        memory: 12Gi
       requests:
         cpu: 4
-        memory: 8Gi
+        memory: 10Gi
     modelConfig:
       maxOngoingRequests: 100
       logLevel: DEBUG
@@ -53,9 +53,12 @@ deployment:
           - name: opus-mt-en-zh
             enabled: false
           - name: opus-mt-zh-en
-            enabled: true
+            enabled: false
           - name: m2m100_418M
-            enabled: true
+            enabled: false
           - name: multilingual-e5-large-instruct
             type: Embedding
+            enabled: true
+          - name: bge-reranker-v2-m3
+            type: Reranker
             enabled: true
