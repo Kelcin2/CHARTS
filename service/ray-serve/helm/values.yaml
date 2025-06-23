@@ -28,9 +28,9 @@ deployment:
     image: kelcin-ray-serve
     imageTag: 3.0.0
     tz: "Asia/Shanghai"
-    configVolumeName: config-volume
-    dataVolumeName: data-volume
-    loggingVolumeName: logging-volume
+    configVolumeName: ray-serve-config-volume
+    configVolumePath: /mnt/host/d/WORKSPACE/Python/LLM/models
+    storage: 20Gi
     resources:
       limits:
         cpu: 5
