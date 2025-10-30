@@ -13,7 +13,7 @@ minikube service http-service --url
 
 minikube start --extra-config=apiserver.Features.Enable-SwaggerUI=true
 
-minikube start -n 1 --memory=24g --cpus=10 --kubernetes-version=v1.30.0 --disk-size=120g --namespace kelcin --mount=true --mount-string='/opt/nfs-storage:/opt/nfs-storage' --extra-config=apiserver.service-node-port-range=1-65535
+minikube start -n 1 --memory=24g --cpus=10 --kubernetes-version=v1.34.0 --disk-size=120g --namespace kelcin --mount=true --mount-string='/opt/nfs-storage:/opt/nfs-storage' --extra-config=apiserver.service-node-port-range=1-65535
 
 -- 来自于任何主机且通过访问本地端口8081的请求都会被转发到Pod的8081端口. 指定的资源必须有关联到的pod, 即资源yaml定义中必须有Pod的selector
 kubectl port-forward --address 0.0.0.0 deployment/http-service 8081:8081 (本地端口:Pod端口)

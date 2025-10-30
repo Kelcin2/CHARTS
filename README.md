@@ -26,7 +26,7 @@
     ```
 3. Assign execute permission to the file
    `chmod +x ~/.minikube/files/etc/rc.local`
-4. restart the minikube
+4. restart the minikube(Maybe you need to restart minikube twice or more to make it work)
 
 #### How to clean minikube cache to prevent from insufficiency disk space
 1. locate directory `~/.minikube/cache`
