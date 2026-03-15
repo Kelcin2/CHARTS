@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.deployment.openclaw.configVolumeName | quote }}
+  labels:
+    {{- include "my-openclaw.labels" . | nindent 4 }}
+spec:
+  resources:
+    requests:
+      storage: {{ .Values.deployment.openclaw.storage }}
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  volumeMode: Filesystem
+  volumeName: {{ printf "%s-%s" .Release.Namespace .Values.deployment.openclaw.configVolumeName | quote }}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ printf "%s-%s" .Release.Namespace .Values.deployment.openclaw.configVolumeName | quote }}
+  labels:
+    {{- include "my-openclaw.labels" . | nindent 4 }}
+spec:
+  capacity:
+    storage: {{ .Values.deployment.openclaw.storage }}
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+  claimRef:
+    name: {{ .Values.deployment.openclaw.configVolumeName | quote }}
+    namespace: {{ .Release.Namespace }}
+  hostPath:
+    path: {{ .Values.deployment.openclaw.configVolumePath | quote }}
+    type: DirectoryOrCreate

@@ -1,0 +1,20 @@
+{{- $thanks := printf "Thank you for deploying `%s` with version `%s`" .Chart.Name .Chart.AppVersion -}}
+{{- $lenBlank := $thanks | len | sub 82 | max 0 | int -}}
+{{- $thanks = printf "**%s%s%s**" (repeat 2 " ") $thanks  (repeat $lenBlank " ") -}}
+{{- $ns := printf "Namespace: %s" .Release.Namespace -}}
+{{- $lenBlank = $ns | len | sub 82 | max 0 | int -}}
+{{- $ns = printf "**%s%s%s**" (repeat 2 " ") $ns  (repeat $lenBlank " ") -}}
+{{- $releaseName := printf "Release Name: %s" .Release.Name -}}
+{{- $lenBlank = $releaseName | len | sub 82 | max 0 | int -}}
+{{- $releaseName = printf "**%s%s%s**" (repeat 2 " ") $releaseName  (repeat $lenBlank " ") -}}
+{{- $authToken := include "my-openclaw.getAuthToken" . | printf "Auth Token: %s" -}}
+{{- $lenBlank = $authToken | len | sub 82 | max 0 | int -}}
+{{- $authToken = printf "**%s%s%s**" (repeat 2 " ") $authToken (repeat $lenBlank " ") -}}
+{{ repeat 88 "*" }}
+**{{ repeat 84 " " }}**
+{{ $thanks }}
+{{ $ns }}
+{{ $releaseName }}
+{{ $authToken }}
+**{{ repeat 84 " " }}**
+{{ repeat 88 "*" }}

@@ -1,0 +1,125 @@
+{{- $endpointId:= .Values.deployment.openclaw.model.config.endpointId -}}
+{{- $baseUrl:= .Values.deployment.openclaw.model.config.baseUrl -}}
+{{- $apiKey:= .Values.deployment.openclaw.model.config.apiKey -}}
+{{- $modelId:= .Values.deployment.openclaw.model.config.modelId -}}
+{{- if empty $endpointId -}}
+{{- fail "deployment.openclaw.model.config.endpointId is required" -}}
+{{- end -}}
+{{- if empty $baseUrl -}}
+{{- fail "deployment.openclaw.model.config.baseUrl is required" -}}
+{{- end -}}
+{{- if empty $apiKey -}}
+{{- fail "deployment.openclaw.model.config.apiKey is required" -}}
+{{- end -}}
+{{- if empty $modelId -}}
+{{- fail "deployment.openclaw.model.config.modelId is required" -}}
+{{- end -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openclaw-config-cm
+  labels:
+    {{- include "my-openclaw.labels" . | nindent 4 }}
+data:
+  openclaw_config: |-
+    {
+      "models": {
+        "mode": "merge",
+        "providers": {
+          "{{ $endpointId }}": {
+            "baseUrl": {{ $baseUrl | quote }},
+            "apiKey": {{ $apiKey | quote }},
+            "api": "openai-completions",
+            "models": [
+              {
+                "id": {{ $modelId | quote }},
+                "name": {{ printf "%s (Custom Provider)" $modelId | quote }},
+                "reasoning": {{ .Values.deployment.openclaw.model.config.reasoning }},
+                "input": [
+                  "text"
+                ],
+                "cost": {
+                  "input": 0,
+                  "output": 0,
+                  "cacheRead": 0,
+                  "cacheWrite": 0
+                },
+                "contextWindow": 16000,
+                "maxTokens": 4096
+              }
+            ]
+          }
+        }
+      },
+      "agents": {
+        "defaults": {
+          "model": {
+            "primary": {{ printf "%s/%s" $endpointId $modelId | quote }}
+          },
+          "models": {
+            {{ printf "%s/%s" $endpointId $modelId | quote }}: {}
+          },
+          "workspace": "/home/node/.openclaw/workspace",
+          "sandbox": {
+            "mode": "off"
+          }
+        }
+      },
+      "tools": {
+        "profile": "coding"
+      },
+      "commands": {
+        "native": "auto",
+        "nativeSkills": "auto",
+        "restart": true,
+        "ownerDisplay": "raw"
+      },
+      "session": {
+        "dmScope": "per-channel-peer"
+      },
+      "hooks": {
+        "internal": {
+          "enabled": true,
+          "entries": {
+            "session-memory": {
+              "enabled": true
+            },
+            "boot-md": {
+              "enabled": true
+            },
+            "bootstrap-extra-files": {
+              "enabled": true
+            }
+          }
+        }
+      },
+      "gateway": {
+        "port": {{ .Values.deployment.openclaw.gatewayPort }},
+        "mode": "local",
+        "bind": "lan",
+        "controlUi": {
+          "allowedOrigins": [
+            "http://localhost:{{ .Values.deployment.openclaw.gatewayPort }}",
+            "http://127.0.0.1:{{ .Values.deployment.openclaw.gatewayPort }}"
+          ]
+        },
+        "auth": {
+          "mode": "token"
+        },
+        "tailscale": {
+          "mode": "off",
+          "resetOnExit": false
+        },
+        "nodes": {
+          "denyCommands": [
+            "camera.snap",
+            "camera.clip",
+            "screen.record",
+            "contacts.add",
+            "calendar.add",
+            "reminders.add",
+            "sms.send"
+          ]
+        }
+      }
+    }

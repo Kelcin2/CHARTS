@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openclaw
+  labels:
+    {{- include "my-openclaw.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "my-openclaw.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "my-openclaw.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+      - name: config-copier
+        image: {{ .Values.deployment.configCopier.image }}:{{ .Values.deployment.configCopier.imageTag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: ['sh', '-c', 'mkdir -p /tmp/.openclaw && test -f /tmp/.openclaw/openclaw.json || cp /tmp/openclaw.json /tmp/.openclaw/']
+        volumeMounts:
+        - name: openclaw-config
+          mountPath: /tmp/openclaw.json
+          subPath: openclaw.json
+          readOnly: true
+        - name: config
+          mountPath: /tmp/.openclaw
+          subPath: .openclaw
+          readOnly: false
+      containers:
+      - name: openclaw
+        image: {{ .Values.deployment.openclaw.image }}:{{ .Values.deployment.openclaw.imageTag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: gateway-port
+          containerPort: {{ .Values.deployment.openclaw.gatewayPort }}
+          protocol: TCP
+        startupProbe:
+          httpGet:
+            path: /healthz
+            port: gateway-port
+          initialDelaySeconds: 0
+          timeoutSeconds: 1
+          periodSeconds: 5
+          failureThreshold: 60
+        livenessProbe:
+          httpGet:
+            scheme: HTTP
+            path: /healthz
+            port: gateway-port
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+          periodSeconds: 60
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            scheme: HTTP
+            path: /healthz
+            port: gateway-port
+          initialDelaySeconds: 10
+          timeoutSeconds: 1
+          periodSeconds: 30
+          successThreshold: 1
+          failureThreshold: 1
+        env:
+        - name: TZ
+          value: {{ .Values.deployment.openclaw.tz | quote }}
+        - name: OPENCLAW_GATEWAY_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: openclaw-secret
+              key: _authToken
+        resources:
+          {{- toYaml .Values.deployment.openclaw.resources | nindent 10 }}
+        volumeMounts:
+        - name: config
+          mountPath: /home/node/.openclaw
+          subPath: .openclaw
+          readOnly: false
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: {{ .Values.deployment.openclaw.configVolumeName }}
+      - name: openclaw-config
+        configMap:
+          name: openclaw-config-cm
+          items:
+          - key: openclaw_config
+            path: openclaw.json

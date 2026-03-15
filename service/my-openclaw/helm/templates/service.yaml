@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: openclaw-svc
+  labels:
+    {{- include "my-openclaw.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+  - port: {{ .Values.service.port }}
+    targetPort: gateway-port
+    protocol: TCP
+  selector:
+    {{- include "my-openclaw.selectorLabels" $ | nindent 4 }}
