@@ -16,6 +16,7 @@ spec:
       labels:
         {{- include "my-openclaw.labels" . | nindent 8 }}
     spec:
+      automountServiceAccountToken: false
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -55,7 +56,7 @@ spec:
             scheme: HTTP
             path: /healthz
             port: gateway-port
-          initialDelaySeconds: 5
+          initialDelaySeconds: 10
           timeoutSeconds: 1
           periodSeconds: 60
           successThreshold: 1
@@ -63,9 +64,9 @@ spec:
         readinessProbe:
           httpGet:
             scheme: HTTP
-            path: /healthz
+            path: /readyz
             port: gateway-port
-          initialDelaySeconds: 10
+          initialDelaySeconds: 5
           timeoutSeconds: 1
           periodSeconds: 30
           successThreshold: 1

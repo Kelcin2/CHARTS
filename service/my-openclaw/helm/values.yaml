@@ -22,6 +22,10 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
 
+securityContext:
+  user: 1999
+  fsGroup: 1999
+
 deployment:
   configCopier:
     image: busybox
@@ -49,3 +53,5 @@ deployment:
         apiKey: ""
         modelId: qwen3.5-flash
         reasoning: true
+        contextWindow: 900000
+        maxTokens: 16384

@@ -44,8 +44,8 @@ data:
                   "cacheRead": 0,
                   "cacheWrite": 0
                 },
-                "contextWindow": 16000,
-                "maxTokens": 4096
+                "contextWindow": {{ .Values.deployment.openclaw.model.config.contextWindow }},
+                "maxTokens": {{ .Values.deployment.openclaw.model.config.maxTokens }}
               }
             ]
           }
@@ -57,13 +57,21 @@ data:
             "primary": {{ printf "%s/%s" $endpointId $modelId | quote }}
           },
           "models": {
-            {{ printf "%s/%s" $endpointId $modelId | quote }}: {}
+            {{ printf "%s/%s" $endpointId $modelId | quote }}: {
+              "alias": {{ $modelId | quote }}
+            }
           },
-          "workspace": "/home/node/.openclaw/workspace",
+          "workspace": "~/.openclaw/workspace",
           "sandbox": {
             "mode": "off"
           }
-        }
+        },
+        "list": [
+          {
+            "id": "default",
+            "name": "OpenClaw Assistant"
+          }
+    ]
       },
       "tools": {
         "profile": "coding"
@@ -98,6 +106,7 @@ data:
         "mode": "local",
         "bind": "lan",
         "controlUi": {
+          "enabled": true,
           "allowedOrigins": [
             "http://localhost:{{ .Values.deployment.openclaw.gatewayPort }}",
             "http://127.0.0.1:{{ .Values.deployment.openclaw.gatewayPort }}"
