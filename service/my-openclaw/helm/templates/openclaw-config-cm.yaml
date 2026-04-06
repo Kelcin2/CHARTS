@@ -1,34 +1,75 @@
 {{- $endpointId:= .Values.deployment.openclaw.model.config.endpointId -}}
 {{- $baseUrl:= .Values.deployment.openclaw.model.config.baseUrl -}}
-{{- $apiKey:= .Values.deployment.openclaw.model.config.apiKey -}}
+{{- $apiKeyFetch:= .Values.deployment.openclaw.model.config.apiKeyFetch -}}
 {{- $modelId:= .Values.deployment.openclaw.model.config.modelId -}}
+{{- $maxLoopRequests:= .Values.deployment.openclaw.maxLoopRequests | int -}}
 {{- if empty $endpointId -}}
 {{- fail "deployment.openclaw.model.config.endpointId is required" -}}
 {{- end -}}
 {{- if empty $baseUrl -}}
 {{- fail "deployment.openclaw.model.config.baseUrl is required" -}}
 {{- end -}}
-{{- if empty $apiKey -}}
-{{- fail "deployment.openclaw.model.config.apiKey is required" -}}
+{{- if empty $apiKeyFetch -}}
+{{- fail "deployment.openclaw.model.config.apiKeyFetch is required" -}}
 {{- end -}}
 {{- if empty $modelId -}}
 {{- fail "deployment.openclaw.model.config.modelId is required" -}}
+{{- end -}}
+{{- if 0 | gt $maxLoopRequests | not -}}
+{{- fail "deployment.openclaw.maxLoopRequests must greater than 0" -}}
 {{- end -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: openclaw-config-cm
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "my-openclaw.labels" . | nindent 4 }}
 data:
+  entrypoint: |-
+    {{- tpl (.Files.Get "script/entrypoint.sh") (dict "id" .Values.deployment.openclaw.model.config.apiKeyFetch.id) | nindent 4 }}
   openclaw_config: |-
     {
+      "secrets": {
+        "providers": {
+          "api-key": {
+            "source": "exec",
+            "command": "/home/node/node/bin/gopass",
+            "args": ["show", "-o","{{ .Values.deployment.openclaw.model.config.apiKeyFetch.id }}"],
+            "jsonOnly": false,
+            "allowSymlinkCommand": true,
+            "allowInsecurePath": true,
+            "passEnv": [
+              "PATH",
+              "GOPASS_HOMEDIR",
+              "GNUPGHOME"
+            ]
+          },
+          "auth-token": {
+            "source": "exec",
+            "command": "/home/node/node/bin/gopass",
+            "args": ["show", "-o","openclaw/auth-token"],
+            "jsonOnly": false,
+            "allowSymlinkCommand": true,
+            "allowInsecurePath": true,
+            "passEnv": [
+              "PATH",
+              "GOPASS_HOMEDIR",
+              "GNUPGHOME"
+            ]
+          }
+        }
+      },
       "models": {
         "mode": "merge",
         "providers": {
           "{{ $endpointId }}": {
             "baseUrl": {{ $baseUrl | quote }},
-            "apiKey": {{ $apiKey | quote }},
+            "apiKey": {
+              "id": "value",
+              "provider": "api-key",
+              "source": "exec"
+            },
             "api": "openai-completions",
             "models": [
               {
@@ -64,18 +105,35 @@ data:
           "workspace": "~/.openclaw/workspace",
           "sandbox": {
             "mode": "off"
+          },
+          "heartbeat": {
+            "every": "0m",
+            "target": "last"
           }
         },
         "list": [
           {
             "id": "default",
             "name": "OpenClaw Assistant",
-            "workspace": "~/.openclaw/workspace"
+            "workspace": "~/.openclaw/workspace",
+            "default": true
           }
     ]
       },
       "tools": {
-        "profile": "coding"
+        "profile": "coding",
+        "loopDetection": {
+          "enabled": true,
+          "historySize": {{ $maxLoopRequests }},
+          "warningThreshold": {{ $maxLoopRequests | mulf 0.6 | ceil | int }},
+          "criticalThreshold": {{ $maxLoopRequests | mulf 0.8 | ceil | int }},
+          "globalCircuitBreakerThreshold": {{ $maxLoopRequests }},
+          "detectors": {
+            "genericRepeat": true,
+            "knownPollNoProgress": true,
+            "pingPong": true
+          }
+        }
       },
       "commands": {
         "native": "auto",
@@ -114,7 +172,12 @@ data:
           ]
         },
         "auth": {
-          "mode": "token"
+          "mode": "token",
+          "token": {
+            "id": "value",
+            "provider": "auth-token",
+            "source": "exec"
+          }
         },
         "tailscale": {
           "mode": "off",

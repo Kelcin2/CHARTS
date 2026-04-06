@@ -2,6 +2,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: {{ .Values.deployment.openclaw.configVolumeName | quote }}
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "my-openclaw.labels" . | nindent 4 }}
 spec:

@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: openclaw
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "my-openclaw.labels" . | nindent 4 }}
 spec:
@@ -16,7 +17,7 @@ spec:
       labels:
         {{- include "my-openclaw.labels" . | nindent 8 }}
     spec:
-      automountServiceAccountToken: false
+      serviceAccountName: openclaw-sa
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -25,12 +26,22 @@ spec:
       - name: config-copier
         image: {{ .Values.deployment.configCopier.image }}:{{ .Values.deployment.configCopier.imageTag }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        command: ['sh', '-c', 'mkdir -p /tmp/.openclaw && test -f /tmp/.openclaw/openclaw.json || cp /tmp/openclaw.json /tmp/.openclaw/']
+        command:
+        - sh
+        - -c
+        - |
+          mkdir -p /tmp/.openclaw
+          test -f /tmp/.openclaw/openclaw.json || cp /tmp/config/openclaw.json /tmp/.openclaw/
+          mkdir -p /tmp/app
+          cp /tmp/config/entrypoint.sh /tmp/app/entrypoint.sh
+          chmod 700 /tmp/app/entrypoint.sh
+          chown 1000:1000 /tmp/app/entrypoint.sh
         volumeMounts:
         - name: openclaw-config
-          mountPath: /tmp/openclaw.json
-          subPath: openclaw.json
+          mountPath: /tmp/config
           readOnly: true
+        - name: entrypoint
+          mountPath: /tmp/app
         - name: config
           mountPath: /tmp/.openclaw
           subPath: .openclaw
@@ -39,6 +50,11 @@ spec:
       - name: openclaw
         image: {{ .Values.deployment.openclaw.image }}:{{ .Values.deployment.openclaw.imageTag }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command:
+          - "/bin/bash"
+        args:
+          - "-c"
+          - "/app/entrypoint.sh {{ .Values.deployment.openclaw.gopassDownloadUrl }}"
         ports:
         - name: gateway-port
           containerPort: {{ .Values.deployment.openclaw.gatewayPort }}
@@ -74,19 +90,39 @@ spec:
         env:
         - name: TZ
           value: {{ .Values.deployment.openclaw.tz | quote }}
-        - name: OPENCLAW_GATEWAY_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: openclaw-secret
-              key: _authToken
+        - name: NPM_CONFIG_PREFIX
+          value: "/home/node/node/node_global"
+        - name: NPM_CONFIG_CACHE
+          value: "/home/node/node/node_cache"
+        - name: PATH
+          value: "/home/node/node/bin:/home/node/node/node_global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+        {{- with .Values.deployment.openclaw.extraEnvs }}
+        {{- range $key, $value := . }}
+        - name: {{ $key }}
+          value: {{ $value | quote }}
+        {{- end }}
+        {{- end }}
         resources:
           {{- toYaml .Values.deployment.openclaw.resources | nindent 10 }}
         volumeMounts:
+        - name: entrypoint
+          mountPath: /app/entrypoint.sh
+          subPath: entrypoint.sh
         - name: config
           mountPath: /home/node/.openclaw
           subPath: .openclaw
           readOnly: false
+        - name: config
+          mountPath: /home/node/node
+          subPath: node
+          readOnly: false
+        - name: config
+          mountPath: /home/node/extraWorkspace
+          subPath: extraWorkspace
+          readOnly: false
       volumes:
+      - name: entrypoint
+        emptyDir: {}
       - name: config
         persistentVolumeClaim:
           claimName: {{ .Values.deployment.openclaw.configVolumeName }}
@@ -96,3 +132,6 @@ spec:
           items:
           - key: openclaw_config
             path: openclaw.json
+          - key: entrypoint
+            path: entrypoint.sh
+            mode: 0744

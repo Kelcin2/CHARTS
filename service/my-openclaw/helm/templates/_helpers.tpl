@@ -74,15 +74,15 @@ get the auth token for openclaw.
 Get the token from root context firstly,
 if exist, then use it directly,
 if not exist,
-    If deployment.openclaw.generateNewToken is true, then generate a new token and set it to root context, and use it directly.
-    If deployment.openclaw.generateNewToken is false, then get the token from openclaw-secret in current namespace.
+    If deployment.openclaw.forceGenerateNewToken is true, then generate a new token and set it to root context, and use it directly.
+    If deployment.openclaw.forceGenerateNewToken is false, then get the token from openclaw-secret in current namespace.
         if found, then set it to root context and use it,
         if not found, then generate a new token, set it to root context and use it.
 */}}
 {{- define "my-openclaw.getAuthToken" -}}
 {{- $token := .Values._authToken -}}
 {{- if empty $token }}
-  {{- if .Values.deployment.openclaw.generateNewToken }}
+  {{- if .Values.deployment.openclaw.forceGenerateNewToken }}
     {{- $token = (include "my-openclaw.genAuthToken" .) -}}
   {{- else }}
     {{- $secret := (lookup "v1" "Secret" .Release.Namespace "openclaw-secret") -}}

@@ -32,7 +32,7 @@ deployment:
     imageTag: 1.37.0
   openclaw:
     image: ghcr.io/openclaw/openclaw
-    imageTag: 2026.3.12
+    imageTag: 2026.4.5
     tz: "Asia/Shanghai"
     configVolumeName: openclaw-config-volume
     configVolumePath: /mnt/host/d/openclaw
@@ -44,13 +44,20 @@ deployment:
       requests:
         cpu: 2
         memory: 2Gi
-    generateNewToken: false
+    forceGenerateNewToken: false
     gatewayPort: 18789
+    maxLoopRequests: 20
+    extraEnvs:
+      GOPASS_HOMEDIR: "/home/node/node/.config/.gopass"
+      GNUPGHOME: "/home/node/node/.config/.gnupg"
+    gopassDownloadUrl: "https://github.com/gopasspw/gopass/releases/download/v1.16.1/gopass-1.16.1-linux-amd64.tar.gz"
     model:
       config:
         endpointId: Qwen
         baseUrl: https://dashscope.aliyuncs.com/compatible-mode/v1
-        apiKey: ""
+        apiKey:
+        apiKeyFetch:
+          id: qwen/api-key
         modelId: qwen3.5-flash
         reasoning: true
         contextWindow: 900000
