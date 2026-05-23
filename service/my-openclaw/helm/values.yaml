@@ -32,7 +32,7 @@ deployment:
     imageTag: 1.37.0
   openclaw:
     image: ghcr.io/openclaw/openclaw
-    imageTag: 2026.4.5
+    imageTag: 2026.4.15
     tz: "Asia/Shanghai"
     configVolumeName: openclaw-config-volume
     configVolumePath: /mnt/host/d/openclaw
