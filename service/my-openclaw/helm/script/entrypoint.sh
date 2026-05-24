@@ -24,9 +24,14 @@ log_error() {
 
 # Download and install gopass
 install_gopass() {
-    local download_url="$1"
+    local download_url="${GOPASS_DOWNLOAD_URL:-}"
     local install_dir="/home/node/node/bin"
     local temp_dir
+
+    if [[ -z "$download_url" ]]; then
+        log_warn "GOPASS_DOWNLOAD_URL not set, skipping gopass download"
+        return 0
+    fi
     
     # Check if gopass already exists
     if command -v gopass &> /dev/null; then
@@ -93,9 +98,9 @@ check_env_vars() {
     if [[ -z "${GOPASS_HOMEDIR:-}" ]]; then
         missing_vars+=("GOPASS_HOMEDIR")
     fi
-    
-    if [[ -z "${GNUPGHOME:-}" ]]; then
-        missing_vars+=("GNUPGHOME")
+
+    if [[ -z "${GOPASS_AGE_PASSWORD:-}" ]]; then
+        missing_vars+=("GOPASS_AGE_PASSWORD")
     fi
     
     if [[ -z "${KUBERNETES_SERVICE_HOST:-}" ]]; then
@@ -110,18 +115,14 @@ check_env_vars() {
 
 # Check if required commands exist
 check_dependencies() {
-    local deps=("gpg" "curl" "python3")
+    local deps=("gopass" "age" "age-keygen" "curl" "python3")
     local missing_deps=()
-    
-    # Check if gopass is available
-    if ! command -v gopass &> /dev/null; then
-        log_error "gopass not found in PATH"
-        exit 1
-    fi
-    
+
     for dep in "${deps[@]}"; do
         if ! command -v "$dep" &> /dev/null; then
             missing_deps+=("$dep")
+        else
+            log_info "${dep} detected successfully"
         fi
     done
     
@@ -129,46 +130,109 @@ check_dependencies() {
         log_error "Missing dependencies: ${missing_deps[*]}"
         exit 1
     fi
+
+    log_info "All dependencies detected successfully"
 }
 
-# Initialize GPG configuration
-init_gpg() {
-    log_info "Initializing GPG configuration..."
-    
-    mkdir -p "$GNUPGHOME"
-    chmod 700 "$GNUPGHOME"
-    
-    # Check if key already exists by trying to list keys with the specific email
-    if gpg --batch --list-keys "openclaw@gmail.com" &> /dev/null; then
-        log_warn "GPG key for openclaw@gmail.com already exists, skipping..."
-    else
-        gpg --batch --generate-key <<EOF
-Key-Type: RSA
-Key-Length: 4096
-Subkey-Type: RSA
-Subkey-Length: 4096
-Name-Real: openclaw
-Name-Email: openclaw@gmail.com
-Expire-Date: 0
-%no-protection
-%commit
-EOF
-        log_info "GPG key generated successfully"
+# Download and install age
+install_age() {
+    local download_url="${GOPASS_AGE_DOWNLOAD_URL:-}"
+    local install_dir="/home/node/node/bin"
+    local temp_dir
+
+    if [[ -z "$download_url" ]]; then
+        log_warn "GOPASS_AGE_DOWNLOAD_URL not set, skipping age download"
+        return 0
     fi
+
+    # Check if both age and age-keygen already exist
+    if command -v age &> /dev/null && command -v age-keygen &> /dev/null; then
+        local age_version
+        age_version=$(age --version 2>&1 | head -1)
+        log_warn "age already installed: ${age_version}"
+        log_warn "age-keygen already installed: $(age-keygen --version 2>&1 | head -1)"
+        return 0
+    fi
+
+    log_info "age/age-keygen not found, downloading from ${download_url}..."
+
+    # Create temp directory
+    temp_dir=$(mktemp -d)
+
+    # Download the tarball
+    if ! curl -s -L --fail "$download_url" -o "${temp_dir}/age.tar.gz"; then
+        log_error "Failed to download age from ${download_url}"
+        rm -rf "$temp_dir"
+        return 1
+    fi
+
+    # Extract the tarball
+    log_info "Extracting age..."
+    if ! tar -xzf "${temp_dir}/age.tar.gz" -C "$temp_dir"; then
+        log_error "Failed to extract age tarball"
+        rm -rf "$temp_dir"
+        return 1
+    fi
+
+    # Find the age binary in extracted files
+    local age_binary
+    age_binary=$(find "$temp_dir" -name "age" -type f | head -1)
+
+    if [[ -z "$age_binary" ]]; then
+        log_error "age binary not found in extracted files"
+        rm -rf "$temp_dir"
+        return 1
+    fi
+
+    # Create install directory if not exists
+    mkdir -p "$install_dir"
+
+    # Move age binary to install directory
+    log_info "Installing age to ${install_dir}/age..."
+    mv "$age_binary" "${install_dir}/age"
+    chmod 755 "${install_dir}/age"
+
+    # Find and install age-keygen binary
+    local age_keygen_binary
+    age_keygen_binary=$(find "$temp_dir" -name "age-keygen" -type f | head -1)
+
+    if [[ -z "$age_keygen_binary" ]]; then
+        log_error "age-keygen binary not found in extracted files"
+        rm -rf "$temp_dir"
+        return 1
+    fi
+
+    mv "$age_keygen_binary" "${install_dir}/age-keygen"
+    chmod 755 "${install_dir}/age-keygen"
+
+    # Clean up temp directory
+    rm -rf "$temp_dir"
+
+    # Verify installation
+    if ! "${install_dir}/age" --version &> /dev/null; then
+        log_error "age installation verification failed"
+        return 1
+    fi
+    if ! "${install_dir}/age-keygen" --version &> /dev/null; then
+        log_error "age-keygen installation verification failed"
+        return 1
+    fi
+    log_info "$(age --version 2>&1 | head -1)"
+    log_info "$(age-keygen --version 2>&1 | head -1)"
+    log_info "age and age-keygen installed successfully to ${install_dir}"
 }
 
-# Initialize gopass
+# Initialize gopass with age backend
 init_gopass() {
-    log_info "Initializing gopass..."
-    
-    # Check if gopass is already initialized by checking .gpg-id file
-    local gpg_id_file="${GOPASS_HOMEDIR}/.local/share/gopass/stores/root/.gpg-id"
-    
-    if [[ -f "$gpg_id_file" ]]; then
-        log_warn "Gopass already initialized (found ${gpg_id_file}), skipping..."
+    log_info "Initializing gopass with age backend..."
+
+    local age_recipients_file="${GOPASS_HOMEDIR}/.local/share/gopass/stores/root/.age-recipients"
+
+    if [[ -f "$age_recipients_file" ]]; then
+        log_warn "Gopass already initialized, skipping..."
     else
-        gopass --yes setup --alias openclaw --create
-        log_info "Gopass initialized successfully"
+        gopass --yes setup --crypto age
+        log_info "Gopass initialized successfully with age backend"
     fi
     
     # disabled git
@@ -249,20 +313,16 @@ insert_secret() {
 # Main function
 main() {
     log_info "Starting gopass initialization script..."
-    
-    # Install gopass if download URL is provided
-    if [[ $# -ge 1 ]] && [[ -n "$1" ]]; then
-        install_gopass "$1"
-    else
-        log_info "No gopass download URL provided, using existing gopass from PATH"
-    fi
-    
+
+    # Install gopass and age if download URLs are provided
+    install_age
+    install_gopass
+
     # Pre-flight checks
     check_dependencies
     check_env_vars
     
-    # Initialize GPG and gopass
-    init_gpg
+    # Initialize gopass with age backend
     init_gopass
     
     # Fetch auth token from Kubernetes and insert into gopass
@@ -288,8 +348,8 @@ main() {
     log_info "All operations completed successfully!"
 
     log_info "Starting OpenClaw process..."
-    docker-entrypoint.sh "node" "openclaw.mjs" "gateway" "--allow-unconfigured"
+    exec node openclaw.mjs gateway
 }
 
-# Run main function with all arguments
-main "$@"
+# Run main function
+main

@@ -32,7 +32,7 @@ deployment:
     imageTag: 1.37.0
   openclaw:
     image: ghcr.io/openclaw/openclaw
-    imageTag: 2026.4.15
+    imageTag: 2026.5.22
     tz: "Asia/Shanghai"
     configVolumeName: openclaw-config-volume
     configVolumePath: /mnt/host/d/openclaw
@@ -49,8 +49,9 @@ deployment:
     maxLoopRequests: 20
     extraEnvs:
       GOPASS_HOMEDIR: "/home/node/node/.config/.gopass"
-      GNUPGHOME: "/home/node/node/.config/.gnupg"
     gopassDownloadUrl: "https://github.com/gopasspw/gopass/releases/download/v1.16.1/gopass-1.16.1-linux-amd64.tar.gz"
+    gopassAgeDownloadUrl: "https://github.com/FiloSottile/age/releases/download/v1.3.1/age-v1.3.1-linux-amd64.tar.gz"
+    gopassAgePassphrase:
     model:
       config:
         endpointId: Qwen

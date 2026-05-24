@@ -1,7 +1,10 @@
 #### How to install
 `kubectl create ns kelcin`
-`helm install -n kelcin my-openclaw ./my-openclaw-1.0.0.tgz --set deployment.openclaw.model.config.apiKey=YOUR_API_KEY --debug --dry-run=client`
-`helm install -n kelcin my-openclaw ./my-openclaw-1.0.0.tgz --set deployment.openclaw.model.config.apiKey=YOUR_API_KEY`
+`helm install -n kelcin my-openclaw ./my-openclaw-1.0.0.tgz --set deployment.openclaw.model.config.apiKey=YOUR_API_KEY --set deployment.openclaw.gopassAgePassphrase=YOUR_PASSPHRASE --debug --dry-run=client`
+`helm install -n kelcin my-openclaw ./my-openclaw-1.0.0.tgz --set deployment.openclaw.model.config.apiKey=YOUR_API_KEY --set deployment.openclaw.gopassAgePassphrase=YOUR_PASSPHRASE`
+
+#### How to upgrade
+`helm upgrade -n kelcin my-openclaw ./my-openclaw-1.0.0.tgz`
 
 #### How to uninstall
 `helm uninstall -n kelcin my-openclaw`

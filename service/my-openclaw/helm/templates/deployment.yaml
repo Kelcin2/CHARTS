@@ -50,11 +50,8 @@ spec:
       - name: openclaw
         image: {{ .Values.deployment.openclaw.image }}:{{ .Values.deployment.openclaw.imageTag }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        command:
-          - "/bin/bash"
         args:
-          - "-c"
-          - "/app/entrypoint.sh {{ .Values.deployment.openclaw.gopassDownloadUrl }}"
+          - "/app/entrypoint.sh"
         ports:
         - name: gateway-port
           containerPort: {{ .Values.deployment.openclaw.gatewayPort }}
@@ -94,6 +91,15 @@ spec:
           value: "/home/node/node/node_global"
         - name: NPM_CONFIG_CACHE
           value: "/home/node/node/node_cache"
+        - name: GOPASS_DOWNLOAD_URL
+          value: {{ .Values.deployment.openclaw.gopassDownloadUrl | quote }}
+        - name: GOPASS_AGE_DOWNLOAD_URL
+          value: {{ .Values.deployment.openclaw.gopassAgeDownloadUrl | quote }}
+        - name: GOPASS_AGE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: openclaw-secret
+              key: _gopassAgePassphrase
         - name: PATH
           value: "/home/node/node/bin:/home/node/node/node_global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
         {{- with .Values.deployment.openclaw.extraEnvs }}

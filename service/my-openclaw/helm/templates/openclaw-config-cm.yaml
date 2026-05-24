@@ -42,7 +42,8 @@ data:
             "passEnv": [
               "PATH",
               "GOPASS_HOMEDIR",
-              "GNUPGHOME"
+              "GNUPGHOME",
+              "GOPASS_AGE_PASSWORD"
             ]
           },
           "auth-token": {
@@ -55,7 +56,8 @@ data:
             "passEnv": [
               "PATH",
               "GOPASS_HOMEDIR",
-              "GNUPGHOME"
+              "GNUPGHOME",
+              "GOPASS_AGE_PASSWORD"
             ]
           }
         }
