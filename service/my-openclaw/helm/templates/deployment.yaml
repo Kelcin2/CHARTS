@@ -36,6 +36,9 @@ spec:
           cp /tmp/config/entrypoint.sh /tmp/app/entrypoint.sh
           chmod 700 /tmp/app/entrypoint.sh
           chown 1000:1000 /tmp/app/entrypoint.sh
+          chown 1000:1000 /tmp/.openclaw
+          chown 1000:1000 /tmp/.openclaw/openclaw.json
+          chmod 755 /tmp/.openclaw/openclaw.json
         volumeMounts:
         - name: openclaw-config
           mountPath: /tmp/config
