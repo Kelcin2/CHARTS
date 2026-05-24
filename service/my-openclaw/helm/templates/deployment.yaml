@@ -83,7 +83,7 @@ spec:
           timeoutSeconds: 1
           periodSeconds: 30
           successThreshold: 1
-          failureThreshold: 1
+          failureThreshold: 3
         env:
         - name: TZ
           value: {{ .Values.deployment.openclaw.tz | quote }}
